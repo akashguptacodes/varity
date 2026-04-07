@@ -242,13 +242,23 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, introY, in
 
 // The expansive "Page" rendered via pure morphological animation framework
 function ProjectOverlay({ cat, onClose }) {
+  const overlayRef = useRef(null);
+  const { scrollYProgress } = useScroll({ container: overlayRef });
+
+  // Floating offsets for whole columns (parallax). 
+  // BOTH start at 0 so they are perfectly aligned horizontally.
+  // We use smaller negative end limits (-80, -150) so they don't scroll up so fast that they overlap the top section.
+  const yParallaxCol1 = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const yParallaxCol2 = useTransform(scrollYProgress, [0, 1], [0, -150]);
+
   return (
     <motion.div
+      ref={overlayRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[100] bg-[#fbfcfb] overflow-y-auto overflow-x-hidden"
+      className="fixed inset-0 z-[100] bg-[#fbfcfb] overflow-y-auto overflow-x-hidden font-sans"
     >
       {/* Float Header / Close */}
       <motion.button 
@@ -263,8 +273,8 @@ function ProjectOverlay({ cat, onClose }) {
         Return to Orbit
       </motion.button>
 
-      {/* Primary Parallax Frame targeting the specific LayoutId map limits */}
-      <div className="relative w-full h-[65vh] md:h-[80vh] flex items-end justify-center">
+      {/* Hero Meta Info - Reduced height as requested */}
+      <div className="relative w-full h-[40vh] md:h-[45vh] flex items-end justify-center">
         
         {/* Core structure that automatically links sizes */}
         <motion.div 
@@ -275,13 +285,13 @@ function ProjectOverlay({ cat, onClose }) {
             layoutId={`card-image-${cat.id}`}
             src={cat.image} 
             alt={cat.title} 
-            className="w-full h-full object-cover opacity-70 mix-blend-luminosity brightness-75 scale-105" 
+            className="w-full h-full object-cover opacity-60 mix-blend-luminosity brightness-75 scale-105" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
         </motion.div>
 
         {/* Hero Meta Info */}
-        <div className="relative z-10 w-full flex flex-col items-center justify-center text-center pb-16 md:pb-24">
+        <div className="relative z-10 w-full flex flex-col items-center justify-center text-center pb-12 md:pb-16">
            <motion.h1 
              layoutId={`card-title-${cat.id}`}
              className="text-white text-[10vw] md:text-[8vw] tracking-tighter text-center uppercase leading-[0.85] drop-shadow-2xl font-black mix-blend-normal"
@@ -294,56 +304,151 @@ function ProjectOverlay({ cat, onClose }) {
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: 0.4 }}
              className="text-[#20C997] uppercase tracking-[0.4em] font-bold text-[11px] md:text-[13px] mt-6 
-                        border border-[#20C997]/30 px-6 py-2 rounded-full bg-black/40 backdrop-blur-md"
+                        border border-[#20C997]/30 px-8 py-3 rounded-full bg-black/40 backdrop-blur-md shadow-lg"
            >
-             Featured Interactive Editing Case
+             Interactive Editing Session
            </motion.p>
         </div>
       </div>
 
-      {/* Elaborate Body Copy strictly mimicking high-end portfolios */}
-      <div className="w-full max-w-7xl mx-auto px-6 md:px-16 py-24 pb-48">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-24 items-start">
+      {/* Primary Section mimicking layout - Massive gap to fully clear the hero curve dynamically */}
+      <div className="w-full max-w-[1500px] mx-auto px-6 md:px-16 pb-[300px] mt-32 md:mt-48 lg:mt-[220px] relative z-20">
+        {/* FLIPPED LAYOUT: lg:flex-row-reverse puts text on right, cards on left */}
+        <div className="flex flex-col lg:flex-row-reverse items-start justify-between gap-16 lg:gap-24 relative w-full">
           
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="md:col-span-4 flex flex-col gap-12"
-          >
-            <div>
-              <p className="text-[#0d7c66] text-[11px] uppercase tracking-[0.2em] font-extrabold mb-3">Role</p>
-              <p className="text-[#064e3b]/80 font-bold leading-relaxed text-[15px]">Cinematic Direction<br/>Immersive Video Flow<br/>Post-Production Math</p>
-            </div>
-            <div>
-              <p className="text-[#0d7c66] text-[11px] uppercase tracking-[0.2em] font-extrabold mb-3">Client Focus</p>
-              <p className="text-[#064e3b]/80 font-bold leading-relaxed text-[15px]">Varity Global Agency</p>
-            </div>
-            <div>
-              <p className="text-[#0d7c66] text-[11px] uppercase tracking-[0.2em] font-extrabold mb-3">Awards</p>
-              <p className="text-[#064e3b]/80 font-bold leading-relaxed text-[15px]">Best Spatial Film 2026<br/>Awwwards Studio</p>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="md:col-span-8"
-          >
-            <h3 className="text-[#042f22] text-[36px] md:text-[54px] leading-[1.05] tracking-tight mb-10" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Breaking the boundaries of linear video interaction sequences.
-            </h3>
-            <p className="text-[#064e3b]/80 text-[18px] md:text-[22px] leading-[1.7] font-semibold">
-              We partnered with the team to completely reinvent the digital editing experience. The primary goal was to remove traditional timeline cuts and replace them with physics-bound motion mechanics that react dynamically to the narrative tension on screen.
-              <br/><br/>
-              By utilizing advanced rendering pathways and heavily computed transition logic, the final video plays sequence operates out-of-bounds, blurring the line between passive viewing and a native desktop VR experience that runs flawlessly on standard browsers.
+          {/* Right Sticky Column (Text) */}
+          <div className="lg:sticky lg:top-40 lg:w-5/12 flex flex-col gap-8 z-20 pt-8">
+            <h2 className="text-[#042f22] text-[48px] md:text-[60px] tracking-tight leading-[1.05]" style={{ fontFamily: "'Playfair Display', serif" }}>
+              One platform for your entire video editing workflow.
+            </h2>
+            <p className="text-[#064e3b]/80 text-xl md:text-[22px] leading-[1.7]">
+              Say goodbye to scattered assets and disconnected timelines. We enable you to manage raw footage, apply intense color grades, and execute global rendering all from a single unified workspace. Plus, we handle everything from timeline optimization to final hardware-accelerated exports flawlessly.
             </p>
+          </div>
+
+          {/* Left Parallax Grid (Cards) */}
+          <div className="lg:w-7/12 relative mt-16 lg:mt-0 w-full flex flex-col sm:flex-row gap-10 items-start">
             
-            <div className="mt-20 w-full h-[400px] md:h-[600px] rounded-[30px] bg-[#eef7f4] overflow-hidden border border-[#0d7c66]/20 place-items-center flex text-[#0a5c4c] font-black text-2xl uppercase tracking-[0.2em] shadow-inner">
-               Secondary Asset Reel
-            </div>
-          </motion.div>
+            {/* Column 1 */}
+            <motion.div style={{ y: yParallaxCol1 }} className="flex-1 flex flex-col gap-10 w-full">
+              
+              {/* Card: Raw Log (Now full width of col 1) */}
+              <div className="w-full bg-[#eaeceb] rounded-[40px] p-8 md:p-10 flex flex-col items-center justify-between border border-[#0d7c66]/10 shadow-sm cursor-pointer hover:-translate-y-2 hover:shadow-xl transition-all duration-500">
+                <p className="self-start text-[#042f22] font-semibold text-xl mb-8">Raw Log</p>
+                <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-white flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#064e3b] opacity-30 sepia contrast-50 grayscale"></div>
+                  <img src={cat.image} className="w-full h-full object-cover" alt="Raw" />
+                </div>
+                <p className="text-[13px] uppercase tracking-[0.2em] text-[#064e3b]/60 font-bold mt-8">S-Log3 Profile</p>
+              </div>
+
+              {/* Card: Graded (Now full width of col 1) */}
+              <div className="w-full bg-[#1a201e] rounded-[40px] p-8 md:p-10 flex flex-col items-center justify-between border border-white/5 shadow-2xl cursor-pointer hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(32,201,151,0.2)] transition-all duration-500">
+                <p className="self-start text-[#20C997] font-semibold text-xl mb-8">Color Graded</p>
+                <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-4 border-[#20C997] shadow-[0_0_40px_rgba(32,201,151,0.3)] relative">
+                  <img src={cat.image} className="w-full h-full object-cover saturate-[1.8] contrast-[1.2]" alt="Graded" />
+                </div>
+                <button className="w-full py-4 mt-8 rounded-full border border-white/20 text-white text-[13px] uppercase font-bold tracking-widest hover:bg-white/10 transition">
+                  View Node
+                </button>
+              </div>
+
+              {/* Card: Export Complete */}
+              <div className="w-full bg-[#1a201e] rounded-[40px] p-10 pb-12 flex flex-col items-center text-center border border-white/5 shadow-2xl cursor-pointer hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500">
+                <div className="w-24 h-28 bg-[#20C997] rounded-[30px] flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(32,201,151,0.4)]">
+                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#042f22" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                   </div>
+                </div>
+                <h3 className="text-white text-[32px] font-medium tracking-tight mb-4 leading-tight">Render<br/>Complete!</h3>
+                <p className="text-white/50 text-base mb-8">Collect your output file below</p>
+                <div className="w-full flex items-center justify-between bg-black/50 rounded-2xl p-4 px-6 border border-white/10 hover:bg-black/70 transition">
+                  <span className="text-white/80 text-[13px] font-mono tracking-wider">SEQ_01_FINAL.MP4</span>
+                  <span className="text-[#20C997] text-[13px] font-bold uppercase tracking-[0.2em] cursor-pointer">Open</span>
+                </div>
+              </div>
+
+            </motion.div>
+
+            {/* Column 2 - Staggered via Frame Motion yParallaxCol2 */}
+            <motion.div style={{ y: yParallaxCol2 }} className="flex-1 flex flex-col gap-10 w-full">
+              
+              {/* Card: Program Performance (Render Times) */}
+              <div className="w-full bg-[#eaeceb] rounded-[40px] p-10 border border-[#0d7c66]/10 shadow-xl cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all duration-500">
+                <h3 className="text-[#042f22] text-[26px] font-black uppercase tracking-tight mb-8">Render Speed</h3>
+                <div className="flex flex-wrap gap-3 mb-10">
+                  <span className="px-5 py-2 rounded-full border border-[#0d7c66]/20 text-[12px] uppercase tracking-widest font-bold text-[#064e3b]">Timeline</span>
+                  <span className="px-5 py-2 rounded-full bg-[#20C997] text-[12px] uppercase tracking-widest font-bold text-[#042f22] shadow-[0_4px_15px_rgba(32,201,151,0.4)]">Exporting</span>
+                </div>
+                {/* Geometric Chart Abstraction */}
+                <div className="w-full h-56 border border-[#0d7c66]/20 relative grid grid-cols-4 grid-rows-3 rounded-2xl overflow-hidden bg-[#e0e4e2]/60 group">
+                   <div className="col-span-4 row-span-1 border-b border-[#0d7c66]/10"></div>
+                   <div className="col-span-4 row-span-1 border-b border-[#0d7c66]/10"></div>
+                   <div className="col-span-1 row-span-3 border-r border-[#0d7c66]/10 absolute inset-y-0 left-[25%] hidden sm:block"></div>
+                   <div className="col-span-1 row-span-3 border-r border-[#0d7c66]/10 absolute inset-y-0 left-[50%] hidden sm:block"></div>
+                   <div className="col-span-1 row-span-3 border-r border-[#0d7c66]/10 absolute inset-y-0 left-[75%] hidden sm:block"></div>
+                   
+                   <svg className="absolute inset-0 w-full h-full transform group-hover:scale-[1.03] transition-transform duration-1000" preserveAspectRatio="none" viewBox="0 0 100 100">
+                     <path d="M0,80 Q20,80 30,50 T60,60 T100,20" fill="none" stroke="#20C997" strokeWidth="3" className="drop-shadow-md" />
+                     <path d="M0,80 Q20,80 30,50 T60,60 T100,20 V100 H0 Z" fill="rgba(32, 201, 151, 0.2)" />
+                     <circle cx="80" cy="30" r="5" fill="#042f22" stroke="#20C997" strokeWidth="2.5" />
+                     <line x1="80" y1="30" x2="80" y2="100" stroke="#042f22" strokeDasharray="4 4" strokeWidth="1.5" />
+                   </svg>
+                   <div className="absolute right-5 top-5 bg-white/70 backdrop-blur pb-px px-3 py-1 rounded text-[11px] text-[#042f22] font-mono border border-black/10">120 fps</div>
+                </div>
+              </div>
+
+              {/* Card: Add Grade Preset */}
+              <div className="w-full bg-[#1a201e] rounded-[40px] p-8 md:p-10 border border-white/5 shadow-2xl pb-10 cursor-pointer hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500">
+                <div className="w-full h-56 bg-white rounded-3xl overflow-hidden mb-8 relative group">
+                  <img src={cat.image} className="w-full h-full object-cover transition duration-1000 group-hover:scale-110" alt="Preset" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                  <div className="absolute bottom-5 left-5 text-white font-mono text-[13px] tracking-widest">LUT_OSIRIS_M3</div>
+                </div>
+                <h3 className="text-white text-2xl font-medium tracking-tight mb-6">Apply Grade Preset</h3>
+                <ul className="flex flex-col gap-4 mb-8">
+                  <li className="flex text-white/70 text-base items-center gap-4"><div className="w-4 h-4 rounded-full bg-[#20C997] flex items-center justify-center shrink-0"><svg className="w-2.5 h-2.5 text-[#042f22]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div> Cinematic contrast curve</li>
+                  <li className="flex text-white/70 text-base items-center gap-4"><div className="w-4 h-4 rounded-full bg-[#20C997] flex items-center justify-center shrink-0"><svg className="w-2.5 h-2.5 text-[#042f22]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div> Lifted shadows</li>
+                  <li className="flex text-white/70 text-base items-center gap-4"><div className="w-4 h-4 rounded-full bg-[#20C997] flex items-center justify-center shrink-0"><svg className="w-2.5 h-2.5 text-[#042f22]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div> Halation effect</li>
+                </ul>
+                <div className="flex gap-4 mb-8">
+                  <div className="flex-1 border border-white/20 rounded-2xl p-5 cursor-pointer hover:bg-white/5 transition group relative overflow-hidden">
+                    <p className="text-white/60 text-[13px] uppercase tracking-widest mb-2 font-bold">Standard</p>
+                    <p className="text-white text-2xl font-medium">$24</p>
+                    <div className="absolute inset-0 border-2 border-[#20C997] rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
+                  </div>
+                  <div className="flex-1 border border-white/20 rounded-2xl p-5 cursor-pointer hover:bg-white/5 transition">
+                    <p className="text-white/60 text-[13px] uppercase tracking-widest mb-2 font-bold">Pro Bundle</p>
+                    <p className="text-white text-2xl font-medium">$49</p>
+                  </div>
+                </div>
+                <button className="w-full py-5 bg-[#20C997] rounded-2xl text-[#042f22] font-black text-[13px] uppercase tracking-[0.2em] hover:bg-[#1ab88a] transition shadow-[0_10px_20px_rgba(32,201,151,0.3)] hover:shadow-[0_15px_30px_rgba(32,201,151,0.4)]">
+                  Add to timeline
+                </button>
+              </div>
+
+              {/* Card: 24 Days Left (Timeline length / Cloud Storage) */}
+              <div className="w-full bg-[#1a201e] rounded-[40px] p-8 md:p-10 border border-white/5 flex flex-col items-center shadow-xl cursor-pointer hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500">
+                 <div className="flex items-center justify-center gap-6 mb-10 text-white w-full border-b border-white/10 pb-8">
+                   <span className="font-extrabold tracking-[0.3em] uppercase text-lg">VARITY</span>
+                   <div className="w-px h-8 bg-white/20"></div>
+                   <span className="font-serif italic text-2xl">Cloud</span>
+                 </div>
+                 <div className="relative w-56 h-56 flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90 group-hover:-rotate-[135deg] transition-transform duration-[1.5s]" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3"></circle>
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#20C997" strokeWidth="4" strokeDasharray="283" strokeDashoffset="80" strokeLinecap="round" className="transition-all duration-1000 ease-out drop-shadow-[0_0_15px_rgba(32,201,151,0.5)]"></circle>
+                    </svg>
+                    <div className="text-center">
+                      <p className="text-white text-[40px] font-medium tracking-tight leading-none mb-2">120<br/><span className="text-2xl text-white/50">GB</span></p>
+                      <p className="text-[#20C997] text-[11px] uppercase font-bold tracking-[0.2em] mt-2">Free space</p>
+                    </div>
+                 </div>
+              </div>
+
+            </motion.div>
+
+          </div>
         </div>
       </div>
     </motion.div>

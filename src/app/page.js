@@ -17,6 +17,14 @@ const CategorySection = dynamic(() => import("@/components/CategorySection"), {
   ssr: false,
 });
 
+const TestimonialsSection = dynamic(() => import("@/components/TestimonialsSection"), {
+  ssr: false,
+});
+
+const FooterSection = dynamic(() => import("@/components/FooterSection"), {
+  ssr: false,
+});
+
 export default function Home() {
   return (
     <main className="relative bg-[#fbfcfb]">
@@ -30,6 +38,12 @@ export default function Home() {
 
       {/* Category Section with moving fluid blob */}
       <CategorySection />
+
+      {/* Testimonials Section */}
+      <TestimonialsSection />
+
+      {/* Footer Section */}
+      <FooterSection />
     </main>
   );
 }
