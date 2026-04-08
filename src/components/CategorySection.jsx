@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform, useAnimationFrame, useMotionValue, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-
+import Neo from "./Neo/Neo";
 const CATEGORIES = [
   { id: 1, title: 'LEVITATE FILM', image: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=600&auto=format&fit=crop' },
   { id: 2, title: 'STUDIO MOAN', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop' },
@@ -36,6 +36,12 @@ export default function CategorySection() {
   const scrollAngle = useTransform(scrollYProgress, [0, 0.25, 1], [0, 0, 360]);
   const introY = useTransform(scrollYProgress, [0, 0.1, 0.25], [120, 120, 0]);
   const introOpacity = useTransform(scrollYProgress, [0, 0.1, 0.25], [0, 0, 1]);
+  const textY1 = useTransform(scrollYProgress, [0, 0.06, 0.15], [0, 0, -1200]);
+  const textY2 = useTransform(scrollYProgress, [0, 0.09, 0.18], [0, 0, -1200]);
+  const textY3 = useTransform(scrollYProgress, [0, 0.12, 0.21], [0, 0, -1200]);
+  const dragAngle = useMotionValue(0);
+  const dragTiltX = useMotionValue(0);
+  const dragTiltZ = useMotionValue(0);
 
   const autoAngle = useMotionValue(0);
 
@@ -59,18 +65,26 @@ export default function CategorySection() {
       <section ref={containerRef} className="relative w-full h-[250vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
         <style dangerouslySetInnerHTML={{__html: `
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+          @keyframes paperFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-6px) rotate(0.8deg); }
+            50% { transform: translateY(2px) rotate(-0.5deg); }
+            75% { transform: translateY(-4px) rotate(0.3deg); }
+          }
         `}} />
         <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-24 z-0">
           
           {/* Exact Replica of Typography tailored for Video Editing */}
-          <div className="absolute inset-0 flex items-center justify-start pointer-events-none z-0 pl-[4vw]">
+          <div 
+            className="absolute inset-0 flex items-center justify-start pointer-events-none z-0 pl-[4vw]"
+          >
             <div 
               className="flex flex-col text-[16vw] md:text-[9.5vw] leading-[0.95] tracking-tight text-[#064e3b] opacity-[0.85] drop-shadow-md select-none -translate-y-[8vh]"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              <span className="self-start pl-[8vw] md:pl-[6vw]">cinematic</span>
-              <span className="self-start pl-[2vw] md:pl-[1vw]">video</span>
-              <span className="self-start pl-[10vw] md:pl-[8vw]">editing</span>
+              <motion.span className="self-start pl-[8vw] md:pl-[6vw] transform-gpu block" style={{ y: textY1, willChange: "transform" }}>cinematic</motion.span>
+              <motion.span className="self-start pl-[2vw] md:pl-[1vw] transform-gpu block" style={{ y: textY2, willChange: "transform" }}>video</motion.span>
+              <motion.span className="self-start pl-[10vw] md:pl-[8vw] transform-gpu block" style={{ y: textY3, willChange: "transform" }}>editing</motion.span>
             </div>
           </div>
 
@@ -79,48 +93,13 @@ export default function CategorySection() {
             
             <motion.div className="absolute inset-0 flex items-center justify-center">
               <motion.div
-                style={{ rotate: scrollAngle, zIndex: 15 }} 
+                style={{ zIndex: 15 }} 
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
               >
-                {/* SVG Displacement for smooth, continuous ripples without any hairy fractal noise */}
-                <svg width="0" height="0" className="absolute pointer-events-none invisible">
-                  <filter id="smooth-wobble">
-                    {/* numOctaves="1" combined with low baseFrequency mathematically guarantees absolute smoothness */}
-                    <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="1" result="noise">
-                      <animate attributeName="baseFrequency" values="0.015;0.025;0.015" dur="15s" repeatCount="indefinite" />
-                    </feTurbulence>
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="45" xChannelSelector="R" yChannelSelector="G" />
-                  </filter>
-                </svg>
-
-                <div 
-                  className="absolute inset-0 flex items-center justify-center p-10" 
-                  style={{ filter: "url(#smooth-wobble)" }}
-                >
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 25, ease: "linear", repeat: Infinity }}
-                    className="w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] rounded-full absolute overflow-hidden shadow-[0_20px_50px_rgba(4,47,34,0.5)]"
-                    style={{
-                      background: "radial-gradient(circle at 35% 35%, #ffffff 0%, #20C997 25%, #0d7c66 55%, #042f22 85%, #000000 100%)",
-                      boxShadow: "inset 10px 10px 30px rgba(255, 255, 255, 0.4), inset -40px -40px 60px rgba(0, 0, 0, 0.9)",
-                    }}
-                  >
-                    {/* Floating dark shadow patch to simulate deep 3D surface bumps */}
-                    <motion.div
-                      animate={{ x: ['-20%', '30%', '-20%'], y: ['-20%', '30%', '-20%'] }}
-                      transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
-                      className="absolute w-[80%] h-[80%] bg-[#000000] opacity-50 rounded-full blur-[40px] mix-blend-multiply"
-                      style={{ top: "10%", left: "10%" }}
-                    />
-                    {/* Floating bright spotlight patch to simulate moving specular surface light */}
-                    <motion.div
-                      animate={{ x: ['30%', '-20%', '30%'], y: ['-20%', '30%', '-20%'] }}
-                      transition={{ duration: 16, ease: "easeInOut", repeat: Infinity }}
-                      className="absolute w-[70%] h-[70%] bg-[#20C997] opacity-60 rounded-full blur-[30px] mix-blend-overlay"
-                      style={{ top: "20%", left: "20%" }}
-                    />
-                  </motion.div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+                  <div className="w-[400px] h-[400px] sm:w-[550px] sm:h-[550px] md:w-[680px] md:h-[680px] relative flex justify-center items-center">
+                    <Neo color="#20C997" />
+                  </div>
                 </div>
               </motion.div>
 
@@ -134,6 +113,9 @@ export default function CategorySection() {
                     numItems={numItems} 
                     scrollAngle={scrollAngle} 
                     autoAngle={autoAngle} 
+                    dragAngle={dragAngle}
+                    dragTiltX={dragTiltX}
+                    dragTiltZ={dragTiltZ}
                     introY={introY}
                     introOpacity={introOpacity}
                     onClick={() => setSelectedCategory(cat)}
@@ -149,14 +131,16 @@ export default function CategorySection() {
 }
 
 // Cards logic dynamically tracking LayoutId for seamless fullscreen stretch
-function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, introY, introOpacity, onClick }) {
+function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle, dragTiltX, dragTiltZ, introY, introOpacity, onClick }) {
   const combinedAngle = useTransform(() => {
-    return (index * (360 / numItems)) + autoAngle.get() + scrollAngle.get();
+    return (index * (360 / numItems)) + autoAngle.get() + scrollAngle.get() + dragAngle.get();
   });
+
+  const isDragging = useRef(false);
 
   const x = useTransform(() => {
     const rad = (combinedAngle.get() * Math.PI) / 180;
-    return Math.cos(rad) * 450; 
+    return Math.cos(rad) * 520; 
   });
 
   const y = useTransform(() => {
@@ -196,28 +180,83 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, introY, in
     return (0.7 + (brightness * 0.3)) * introOpacity.get();
   });
 
+  // Staggered idle float wobble per card
+  const wobbleDelay = `${index * -0.7}s`;
+
   // Use absolute pointers, hardware acceleration, and isolate to composite layer
   return (
     <motion.div
       className="absolute flex flex-col justify-center items-center transform-gpu"
       style={{ x, y, zIndex, scale, opacity, rotateY, pointerEvents: "none", willChange: "transform, opacity" }}
     >
-      <div className="relative group cursor-pointer pointer-events-auto transform-gpu" onClick={onClick}>
+      <motion.div 
+        className="relative group cursor-pointer pointer-events-auto transform-gpu select-none" 
+        style={{ 
+          touchAction: "pan-y", 
+          WebkitUserSelect: "none", 
+          userSelect: "none",
+          rotateX: dragTiltX,
+          rotateZ: dragTiltZ,
+          transformOrigin: "center center",
+        }}
+        onPan={(e, info) => {
+          dragAngle.set(dragAngle.get() - info.delta.x * 0.2);
+          // Paper-like reactive tilt based on drag velocity
+          const tiltX = Math.max(-15, Math.min(15, info.velocity.y * 0.02));
+          const tiltZ = Math.max(-12, Math.min(12, -info.velocity.x * 0.015));
+          dragTiltX.set(tiltX);
+          dragTiltZ.set(tiltZ);
+        }}
+        onPanStart={() => {
+          isDragging.current = true;
+        }}
+        onPanEnd={() => {
+          setTimeout(() => { isDragging.current = false; }, 50);
+          // Spring settle back to flat
+          const springBack = (mv, target) => {
+            const step = () => {
+              const current = mv.get();
+              const next = current + (target - current) * 0.15;
+              mv.set(Math.abs(next - target) < 0.1 ? target : next);
+              if (Math.abs(next - target) > 0.1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          };
+          springBack(dragTiltX, 0);
+          springBack(dragTiltZ, 0);
+        }}
+        onClick={(e) => {
+          if (!isDragging.current) {
+            onClick();
+          }
+        }}
+        whileTap={{ scale: 0.97, rotateX: 3, transition: { type: "spring", stiffness: 400, damping: 15 } }}
+      >
         
-        {/* Core LayoutId tracking node allowing Framer to map this exactly up to max screen */}
-        <motion.div 
-          layoutId={`card-container-${cat.id}`}
-          className="relative w-[300px] h-[300px] md:w-[360px] md:h-[360px] rounded-none overflow-hidden bg-[#064e3b] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu bg-black"
-          style={{ willChange: "transform" }}
+        {/* Idle paper float wobble wrapper */}
+        <motion.div
+          className="transform-gpu"
+          style={{ 
+            animation: `paperFloat 4s ease-in-out infinite`,
+            animationDelay: wobbleDelay,
+          }}
         >
-          <motion.img 
-            layoutId={`card-image-${cat.id}`}
-            src={cat.image} 
-            alt={cat.title} 
-            className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110" 
-          />
-          <motion.div style={{ opacity: darknessOverlayOpacity }} className="absolute inset-0 bg-black pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none opacity-50 group-hover:opacity-30 transition-opacity" />
+          {/* Core LayoutId tracking node allowing Framer to map this exactly up to max screen */}
+          <motion.div 
+            layoutId={`card-container-${cat.id}`}
+            className="relative w-[300px] h-[300px] md:w-[360px] md:h-[360px] rounded-none overflow-hidden bg-[#064e3b] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu bg-black"
+            style={{ willChange: "transform" }}
+          >
+            <motion.img 
+              layoutId={`card-image-${cat.id}`}
+              src={cat.image} 
+              alt={cat.title} 
+              draggable={false}
+              className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 pointer-events-none" 
+            />
+            <motion.div style={{ opacity: darknessOverlayOpacity }} className="absolute inset-0 bg-black pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none opacity-50 group-hover:opacity-30 transition-opacity" />
+          </motion.div>
         </motion.div>
         
         {/* Shared Layout Titles morph outwards beautifully - Removed expensive drop-shadow filters for fast textShadow */}
@@ -235,7 +274,7 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, introY, in
         >
           View Project
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
