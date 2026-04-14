@@ -8,44 +8,48 @@ const baseTextures = [
   "/social-export.png",
 ];
 
-// Generate exactly 40 cards arranged vividly in clear circular paths
+// Generate cards arranged on clean circular rings like Cosmos
+// Cards orbit in a flat plane, upright, with no self-rotation.
 export const CARD_DATA = Array.from({ length: 44 }).map((_, i) => {
-  let radius, scale, angleOffset, speed, zOffset;
+  let radius, scale, angleOffset, speed, zOffset, tilt;
 
-  // Group into 4 strictly defined circular rings
+  // Group into 4 strictly defined circular rings with NO random jitter in radius
   if (i < 8) {
-    // Ring 1 (Inner)
-    radius = 5.5 + Math.random() * 0.5;
-    scale = 0.9 + Math.random() * 0.2;
+    // Ring 1 (Inner) — closest to centre text
+    radius = 5.5;
+    scale = 0.85;
     angleOffset = (i / 8) * Math.PI * 2;
-    speed = 0.25; // significantly faster
+    speed = 0.22;
+    zOffset = 0;
   } else if (i < 20) {
     // Ring 2
-    radius = 9.5 + Math.random() * 0.5;
-    scale = 1.2 + Math.random() * 0.3;
+    radius = 9.5;
+    scale = 1.1;
     angleOffset = ((i - 8) / 12) * Math.PI * 2;
-    speed = 0.18;
+    speed = 0.15;
+    zOffset = -0.5;
   } else if (i < 32) {
     // Ring 3
-    radius = 14.0 + Math.random() * 0.5;
-    scale = 1.5 + Math.random() * 0.4;
+    radius = 14.0;
+    scale = 1.4;
     angleOffset = ((i - 20) / 12) * Math.PI * 2;
-    speed = 0.12;
+    speed = 0.10;
+    zOffset = -1.0;
   } else {
     // Ring 4 (Outer)
-    radius = 19.0 + Math.random() * 1.0;
-    scale = 1.8 + Math.random() * 0.5;
+    radius = 19.0;
+    scale = 1.7;
     angleOffset = ((i - 32) / 12) * Math.PI * 2;
-    speed = 0.08;
+    speed = 0.06;
+    zOffset = -1.5;
   }
 
-  // Keep Z offset very tight so they don't look scattered in 3D space
-  zOffset = (Math.random() - 0.5) * 1.5; 
-  
-  // Pure Z tilt for 2D sticker look
-  const tilt = (Math.random() - 0.5) * 0.8; 
+  // Cosmos-style tilt: slight static lean based on angular position
+  // Cards tilt gently away from centre — like stickers pinned to a board
+  tilt = Math.sin(angleOffset) * 0.15;
+
   const texture = baseTextures[i % baseTextures.length];
-  
+
   return {
     id: i + 1,
     texture,

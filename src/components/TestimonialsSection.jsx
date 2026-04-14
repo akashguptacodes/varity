@@ -1,13 +1,12 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import {
   motion,
   useMotionValue,
   useTransform,
   wrap,
   animate,
-  useInView,
 } from "framer-motion";
 
 const testimonials = [
@@ -53,34 +52,16 @@ const testimonials = [
   },
 ];
 
-const items = [...testimonials, ...testimonials]; // Reduced duplication to massively improve GPU performance
+const items = [...testimonials, ...testimonials];
 
 const TestimonialsSection = () => {
   const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { margin: "200px" });
   const baseX = useMotionValue(0);
-  const itemWidth = 220; // Reduced width for overlapping effect
-  const [isHovered, setIsHovered] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const itemWidth = 220;
+  const [setIsHovered] = useState(false);
   const slideTargetRef = useRef(null);
 
-  useEffect(() => {
-    let controls;
-    // Only run the infinite background scroll if the component is physically in the viewport
-    if (!isHovered && isPlaying && isInView) {
-      controls = animate(baseX, baseX.get() - itemWidth * 1000, {
-        duration: 5000, 
-        ease: "linear",
-        repeat: Infinity,
-      });
-    }
-    
-    return () => controls?.stop();
-  }, [baseX, isHovered, isPlaying, isInView, itemWidth]);
-
   const slide = (direction) => {
-    setIsPlaying(false);
-    
     // Resolve intended destination cleanly to allow rapid stacking
     const currentAnchor = slideTargetRef.current !== null 
       ? slideTargetRef.current 
@@ -93,7 +74,6 @@ const TestimonialsSection = () => {
       duration: 0.8,
       ease: [0.25, 1, 0.5, 1], 
       onComplete: () => {
-        setIsPlaying(true);
         slideTargetRef.current = null;
       }
     });
@@ -105,6 +85,11 @@ const TestimonialsSection = () => {
     >
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+        @keyframes testimonialFloat {
+          0%, 100% { transform: translateY(0px); }
+          33% { transform: translateY(-5px); }
+          66% { transform: translateY(3px); }
+        }
       `}} />
 
       {/* Decorative Lights */}
@@ -127,7 +112,7 @@ const TestimonialsSection = () => {
       {/* Reduced width container to properly frame the 3 cards and keep arrows outside */}
       <div className="relative flex items-center justify-center w-full max-w-[850px] mx-auto h-[550px] z-10 px-4">
         
-        {/* Left Arrow - Moved physically outside the card rendering zone */}
+        {/* Left Arrow */}
         <button
           onClick={() => slide(1)}
           className="absolute left-0 lg:-left-12 z-50 w-14 h-14 bg-white border border-[#20C997]/30 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_10px_40px_rgba(4,47,34,0.15)] hover:scale-110 hover:bg-[#EFF8F6] hover:border-[#0d7c66]/50 transition-all focus:outline-none"
@@ -138,7 +123,7 @@ const TestimonialsSection = () => {
         </button>
 
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,2%,black_98%,transparent)]" ref={containerRef}>
-          <div className="relative w-full h-full flex items-center justify-center" style={{ perspective: 1200, transformStyle: "preserve-3d" }}>
+          <div className="relative w-full h-full flex items-center justify-center">
             {items.map((item, index) => (
             <Card
               key={`${item.id}-${index}`}
@@ -153,7 +138,7 @@ const TestimonialsSection = () => {
           </div>
         </div>
 
-        {/* Right Arrow - Moved outside */}
+        {/* Right Arrow */}
         <button
           onClick={() => slide(-1)}
           className="absolute right-0 lg:-right-12 z-50 w-14 h-14 bg-white border border-[#20C997]/30 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_10px_40px_rgba(4,47,34,0.15)] hover:scale-110 hover:bg-[#EFF8F6] hover:border-[#0d7c66]/50 transition-all focus:outline-none"
@@ -179,72 +164,83 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
   const distanceRange = [-itemWidth * 1.35, -itemWidth, 0, itemWidth, itemWidth * 1.35];
 
   const scale = useTransform(xTransform, distanceRange, [0.7, 0.85, 1, 0.85, 0.7]);
-  const opacity = useTransform(xTransform, distanceRange, [0, 0.9, 1, 0.9, 0]); // Higher opacity for the 3 visible cards
+  const opacity = useTransform(xTransform, distanceRange, [0, 0.9, 1, 0.9, 0]);
   const zIndex = useTransform(xTransform, distanceRange, [0, 10, 50, 10, 0]);
-  const z = useTransform(xTransform, distanceRange, [-100, -20, 50, -20, -100]); // True 3D depth resolving to prevent zIndex visual pops
-  const rotateY = useTransform(xTransform, distanceRange, [25, 15, 0, -15, -25]);
+  // Cards are flat — no rotateY tilt for behind cards, they stay straight on screen
+  
+  // Subtle floating animation delay per card
+  const floatDelay = `${(index % 5) * -0.8}s`;
+  // Subtle static tilt per card — just a tiny lean for visual variety
+  const staticTilt = ((index % 5) - 2) * 0.8; // range: -1.6 to 1.6 degrees
 
   return (
     <motion.div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsHovered?.(true)}
+      onMouseLeave={() => setIsHovered?.(false)}
       style={{
-        width: 380, // Fixed width larger than itemWidth to create overlap
+        width: 380,
         x: xTransform,
         scale,
         opacity,
         zIndex,
-        z,
-        rotateY,
         height: 480, 
         willChange: "transform, opacity", 
-        backfaceVisibility: "hidden" 
       }}
-      className="absolute top-10 flex flex-col justify-between bg-white border border-[#20C997]/20 rounded-[30px] shadow-[0_30px_60px_-15px_rgba(4,47,34,0.2)] p-8 md:p-10"
+      className="absolute top-10 transform-gpu"
     >
-      {/* Decorative Quote Mark - Better placement */}
-      <span 
-        className="absolute top-6 right-8 text-[#20C997] opacity-[0.15] text-[120px] leading-none font-serif select-none pointer-events-none"
-        style={{ fontFamily: "'Playfair Display', serif" }}
+      {/* Floating + tilt wrapper */}
+      <div
+        className="w-full h-full flex flex-col justify-between bg-white border border-[#20C997]/20 rounded-[30px] shadow-[0_30px_60px_-15px_rgba(4,47,34,0.2)] p-8 md:p-10"
+        style={{
+          animation: `testimonialFloat 5s ease-in-out infinite`,
+          animationDelay: floatDelay,
+          transform: `rotate(${staticTilt}deg)`,
+        }}
       >
-        &rdquo;
-      </span>
+        {/* Decorative Quote Mark */}
+        <span 
+          className="absolute top-6 right-8 text-[#20C997] opacity-[0.15] text-[120px] leading-none font-serif select-none pointer-events-none"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          &rdquo;
+        </span>
 
-      {/* Top Section: Stars & Quote */}
-      <div className="relative z-10 flex flex-col gap-6">
-        {/* Star Rating mapped to look premium */}
-        <div className="flex gap-1.5">
-          {[...Array(5)].map((_, i) => (
-            <svg key={i} className="w-5 h-5 text-[#20C997]" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          ))}
-        </div>
+        {/* Top Section: Stars & Quote */}
+        <div className="relative z-10 flex flex-col gap-6">
+          {/* Star Rating */}
+          <div className="flex gap-1.5">
+            {[...Array(5)].map((_, i) => (
+              <svg key={i} className="w-5 h-5 text-[#20C997]" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+          </div>
 
-        <p className="text-[#042f22] font-semibold leading-[1.7] text-[16px] md:text-[18px]">
-          "{item.text}"
-        </p>
-      </div>
-
-      {/* Bottom Section: Profile */}
-      <div className="relative z-10 flex items-center gap-4 mt-6 pt-6 border-t border-[#0d7c66]/10">
-        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#20C997] shadow-lg shrink-0">
-          <img 
-            src={item.image} 
-            alt={item.name} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="flex flex-col">
-          <h4 
-            className="text-[#042f22] font-bold text-[18px] tracking-tight"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            {item.name}
-          </h4>
-          <p className="text-[#0d7c66] font-semibold text-[13px] mt-0.5">
-            {item.role} <span className="opacity-60 text-xs px-1">•</span> {item.company}
+          <p className="text-[#042f22] font-semibold leading-[1.7] text-[16px] md:text-[18px]">
+            "{item.text}"
           </p>
+        </div>
+
+        {/* Bottom Section: Profile */}
+        <div className="relative z-10 flex items-center gap-4 mt-6 pt-6 border-t border-[#0d7c66]/10">
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#20C997] shadow-lg shrink-0">
+            <img 
+              src={item.image} 
+              alt={item.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="flex flex-col">
+            <h4 
+              className="text-[#042f22] font-bold text-[18px] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {item.name}
+            </h4>
+            <p className="text-[#0d7c66] font-semibold text-[13px] mt-0.5">
+              {item.role} <span className="opacity-60 text-xs px-1">•</span> {item.company}
+            </p>
+          </div>
         </div>
       </div>
     </motion.div>

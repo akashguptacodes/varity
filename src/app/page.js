@@ -25,6 +25,14 @@ const FooterSection = dynamic(() => import("@/components/FooterSection"), {
   ssr: false,
 });
 
+const BookCallSection = dynamic(() => import("@/components/BookCallSection"), {
+  ssr: false,
+});
+
+const CalendlyButton = dynamic(() => import("@/components/CalendlyButton"), {
+  ssr: false,
+});
+
 export default function Home() {
   return (
     <main className="relative bg-[#fbfcfb]">
@@ -42,8 +50,14 @@ export default function Home() {
       {/* Testimonials Section */}
       <TestimonialsSection />
 
+      {/* Book Call Section */}
+      <BookCallSection />
+
       {/* Footer Section */}
       <FooterSection />
+
+      {/* Floating Global Calendly Button (Always bottom-right) */}
+      <CalendlyButton url="https://calendly.com/akashgupta7484/30min" />
     </main>
   );
 }

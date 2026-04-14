@@ -281,3 +281,20 @@ body {
   background-image: radial-gradient(circle, #0d7c66 1px, transparent 1px);
   background-size: 30px 30px;
 }
+
+/* Bypass Tailwind JIT for responsive Calendly Button Padding */
+.calendly-btn-pad {
+  padding: 10px 24px;
+}
+
+@media (min-width: 768px) {
+  .calendly-btn-pad {
+    padding: 14px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .calendly-btn-pad {
+    padding: 18px 40px;
+  }
+}

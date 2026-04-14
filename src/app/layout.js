@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -77,6 +78,13 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {process.env.NODE_ENV === "development" && (
+          <Script 
+            src="//unpkg.com/react-grab/dist/index.global.js" 
+            crossOrigin="anonymous" 
+            strategy="beforeInteractive" 
+          />
+        )}
       </head>
       <body className="min-h-screen bg-white text-[#1a1a2e] antialiased">
         {children}

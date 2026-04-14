@@ -117,8 +117,12 @@ export default function FloatingVideoCard({
     meshRef.current.position.y = lerp(meshRef.current.position.y, worldY + my, 0.1);
     meshRef.current.position.z = lerp(meshRef.current.position.z, worldZ + hoverRef.current * 4.0, 0.1);
 
-    // Pure 2D sticker tilt (no X or Y rotation needed, strictly flat to camera)
-    meshRef.current.rotation.z = tilt;
+    // Radial alignment: short edge of the card always faces toward/away from centre.
+    // rotation.z = angle locks the card's orientation to its orbit (synchronous rotation)
+    // so it never appears to spin on its own axis.
+    meshRef.current.rotation.x = 0;
+    meshRef.current.rotation.y = 0;
+    meshRef.current.rotation.z = angle;
 
     // Scale up noticeably on hover to make it "come forward"
     const targetScale = baseScale * (1 + hoverRef.current * 0.35);
