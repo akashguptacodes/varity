@@ -319,6 +319,8 @@ function FloatingCard({ card, enterDelay, onCardClick }) {
       <motion.div layoutId={`hover-card-${video.id}`} className="w-full h-full relative group">
         <img
           src={thumbUrl}
+          loading="lazy"
+          decoding="async"
           alt={video.title}
           className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
         />
@@ -387,35 +389,54 @@ function ProjectOverlay({ cat, onClose }) {
 
 
       {/* ── MASTER PADDING WRAPPER ── */}
-      <div className="w-full min-h-screen pl-[60px] pt-[100px] md:pl-[140px] md:pt-[150px] lg:pl-[220px] lg:pt-[190px] xl:pl-[300px] xl:pt-[240px] pr-[40px]">
+      <div 
+        className="w-full min-h-screen pr-8"
+        style={{ paddingLeft: "max(2rem, 2vw)", paddingTop: "max(1rem, 1vh)" }}
+      >
 
         {/* ── Hero Header ── left-aligned with proper margins ── */}
-        <div className="w-full max-w-[1800px] pb-8 relative z-[60] flex flex-col items-start justify-start text-left">
+        <div className="w-full pb-8 relative z-[60] flex flex-col items-start justify-start text-left">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-[700px] flex flex-col items-start"
+            style={{ paddingLeft: "clamp(1rem, 1vw, 1rem)", paddingTop: "clamp(1rem, 1vh, 1rem)" }}
           >
-            {/* Streamlined Modern Back Button */}
+            {/* Sleek Glassmorphic Back Button */}
             <button
               onClick={onClose}
-              className="flex items-center gap-4 mb-10 md:mb-12 px-6 py-3 rounded-full border border-gray-200/80 bg-white/50 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all group cursor-pointer shadow-sm backdrop-blur-sm"
+              className="group cursor-pointer"
+              style={{ marginBottom: "1rem" }}
             >
-              <div className="w-7 h-7 rounded-full bg-[#f9fafb] border border-gray-100 flex items-center justify-center shadow-sm text-gray-400 group-hover:text-black group-hover:bg-[#20C997] group-hover:border-[#20C997] transition-colors">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:stroke-white transition-colors"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+              <div 
+                className="flex items-center gap-1 rounded-full bg-white/60 backdrop-blur-md border border-gray-200/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover:bg-white group-hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-400 ease-out"
+                style={{ paddingTop: "12px", paddingBottom: "12px", paddingLeft: "8px", paddingRight: "28px" }}
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center group-hover:bg-[#20C997] transition-all duration-400 ease-out">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-400 group-hover:text-white transition-colors duration-400 group-hover:-translate-x-0.5"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                </div>
+                <span className="uppercase tracking-[0.2em] text-[11px] font-bold text-gray-500 group-hover:text-[#042f22] transition-colors duration-400 pt-[2px]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  All Categories
+                </span>
               </div>
-              <span className="uppercase tracking-[0.15em] text-[10px] md:text-[11px] font-bold text-gray-500 group-hover:text-black transition-colors leading-none pt-[1px]" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Back to Categories
-              </span>
             </button>
 
             {/* Category tag */}
-            <div className="flex items-center gap-3 mb-6 justify-start">
-              <div className="flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#20C997]/10 border border-[#20C997]/20">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 10px rgba(32,201,151,0.5)" }} />
+            <div className="flex items-center justify-start" style={{ marginBottom: "1rem" }}>
+              <div 
+                className="flex items-center gap-3 rounded-full border border-[#20C997]/25"
+                style={{ 
+                  background: "linear-gradient(90deg, rgba(32,201,151,0.12) 0%, rgba(32,201,151,0.02) 100%)",
+                  paddingTop: "12px", 
+                  paddingBottom: "12px", 
+                  paddingLeft: "24px", 
+                  paddingRight: "24px" 
+                }}
+              >
+                <div className="w-2 h-2 rounded-full bg-[#20C997]" style={{ boxShadow: "0 0 8px rgba(32,201,151,0.6)" }} />
                 <span
-                  className="text-[#0d9488] text-[10px] md:text-[12px] uppercase tracking-[0.25em] font-black"
+                  className="text-[#0d9488] text-[10px] md:text-[11px] uppercase tracking-[0.25em] font-black"
                   style={{ fontFamily: "'Inter', sans-serif" }}
                 >
                   {cat.title}
@@ -425,8 +446,8 @@ function ProjectOverlay({ cat, onClose }) {
 
             <motion.h1
               layoutId={`card-title-${cat.id}`}
-              className="text-[#042f22] text-[28px] md:text-[42px] lg:text-[48px] tracking-tight leading-[1.1] font-bold text-left drop-shadow-sm"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              className="text-[#042f22] text-[28px] md:text-[42px] lg:text-[48px] tracking-tight leading-[1.05] font-bold text-left drop-shadow-sm"
+              style={{ fontFamily: "'Playfair Display', serif", marginBottom: "0.75rem" }}
             >
               A Unified Platform For Cinematic Stories
             </motion.h1>
@@ -435,8 +456,8 @@ function ProjectOverlay({ cat, onClose }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45, duration: 0.9 }}
-              className="text-[#4b5563] text-[14px] md:text-[16px] leading-[1.7] mt-5 font-normal max-w-[500px] text-left"
-              style={{ fontFamily: "'Inter', sans-serif" }}
+              className="text-[#4b5563] text-[15px] md:text-[17px] leading-[1.7] font-normal max-w-[550px] text-left"
+              style={{ fontFamily: "'Inter', sans-serif", marginBottom: "1.75rem" }}
             >
               Revolutionize your production engine. We empower creators to grade, assemble, and master their visual narratives — all within a single high-performance pipeline.
             </motion.p>
@@ -446,8 +467,8 @@ function ProjectOverlay({ cat, onClose }) {
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-24 h-[2.5px] mt-12 origin-left"
-              style={{ background: "#20C997" }}
+              className="w-24 h-[3px] origin-left rounded-full"
+              style={{ background: "linear-gradient(90deg, #20C997 0%, transparent 100%)" }}
             />
           </motion.div>
         </div>
@@ -578,6 +599,7 @@ function CenterHoverModal({ video, onClose }) {
           <iframe
             src={`${video.src}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`}
             className="absolute inset-0 w-full h-full"
+            loading="lazy"
             allowFullScreen
             allow="autoplay; encrypted-media"
             title={video.title}

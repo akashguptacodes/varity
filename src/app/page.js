@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import UIOverlay from "@/components/UIOverlay";
+import LazySection from "@/components/LazySection";
 
 // Dynamically import the 3D scene to avoid SSR issues with Three.js
 const Hero3D = dynamic(() => import("@/components/Hero3D"), {
@@ -45,16 +46,24 @@ export default function Home() {
       </section>
 
       {/* Category Section with moving fluid blob */}
-      <CategorySection />
+      <LazySection minHeight="250vh">
+        <CategorySection />
+      </LazySection>
 
       {/* Testimonials Section */}
-      <TestimonialsSection />
+      <LazySection minHeight="100vh">
+        <TestimonialsSection />
+      </LazySection>
 
       {/* Book Call Section */}
-      <BookCallSection />
+      <LazySection minHeight="50vh">
+        <BookCallSection />
+      </LazySection>
 
       {/* Footer Section */}
-      <FooterSection />
+      <LazySection minHeight="40vh">
+        <FooterSection />
+      </LazySection>
 
       {/* Floating Global Calendly Button (Always bottom-right) */}
       <CalendlyButton url="https://calendly.com/akashgupta7484/30min" />

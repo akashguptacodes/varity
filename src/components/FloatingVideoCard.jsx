@@ -6,7 +6,9 @@ import * as THREE from "three";
 import { lerp, clamp } from "@/lib/utils";
 
 export default function FloatingVideoCard({
-  texture: texturePath,
+  texture,
+  geometry,
+  scrollVelocityRef,
   radius,
   speed,
   angleOffset,
@@ -21,50 +23,11 @@ export default function FloatingVideoCard({
   const hoverRef = useRef(0);
   
   const angleRef = useRef(angleOffset);
-  const scrollVelocityRef = useRef(0);
 
   // Intro Animation State
   // Start the card outside of its normal orbit (radius + 20) and spin 15x faster initially
   const currentRadius = useRef(radius + 15);
   const currentSpeedMult = useRef(15);
-
-  // Track global scroll for acceleration effect
-  const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
-
-  // Load texture
-  const texture = useLoader(THREE.TextureLoader, texturePath);
-  texture.colorSpace = THREE.SRGBColorSpace;
-
-  // Rounded rectangle shape matching Cosmos icons
-  const roundedRectShape = useMemo(() => {
-    const w = 1.4;
-    const h = 0.95;
-    const r = 0.15; // smoother corners
-    const shape = new THREE.Shape();
-    shape.moveTo(-w / 2 + r, -h / 2);
-    shape.lineTo(w / 2 - r, -h / 2);
-    shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-    shape.lineTo(w / 2, h / 2 - r);
-    shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-    shape.lineTo(-w / 2 + r, h / 2);
-    shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-    shape.lineTo(-w / 2, -h / 2 + r);
-    shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-    return shape;
-  }, []);
-
-  const geometry = useMemo(() => {
-    const geo = new THREE.ShapeGeometry(roundedRectShape, 32);
-    const pos = geo.attributes.position;
-    const uvs = new Float32Array(pos.count * 2);
-    for (let i = 0; i < pos.count; i++) {
-      uvs[i * 2] = (pos.getX(i) + 0.7) / 1.4;
-      uvs[i * 2 + 1] = (pos.getY(i) + 0.475) / 0.95;
-    }
-    geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
-    geo.computeVertexNormals();
-    return geo;
-  }, [roundedRectShape]);
 
   // Calculate depth-based opacity
   // Cards deep in bg (-25) have low opacity, foreground (0) are fully opaque
@@ -80,15 +43,6 @@ export default function FloatingVideoCard({
     currentRadius.current = lerp(currentRadius.current, radius, 0.04);
     // Smoothly drag the speed multiplier down from 15x to 1x over ~1.5 seconds
     currentSpeedMult.current = lerp(currentSpeedMult.current, 1, 0.03);
-
-    // Calculate scroll velocity
-    const currentScrollY = typeof window !== "undefined" ? window.scrollY : 0;
-    const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
-    lastScrollY.current = currentScrollY;
-
-    // Smooth the scroll velocity heavily so the cards spin smoothly after a scroll
-    // Significantly increased scrolling sensitivity requested by user
-    scrollVelocityRef.current = lerp(scrollVelocityRef.current, scrollDelta, 0.1);
 
     // Dynamic speed: base speed * Intro multiplier + heavy multiplier for scroll velocity
     const dynamicSpeed = (speed * currentSpeedMult.current) + scrollVelocityRef.current * 0.1;
