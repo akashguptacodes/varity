@@ -2,15 +2,28 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { generateSpherePositions } from './NeoUtils/sphere';
 
-const ParticleSphere = ({ color }) => {
+const ParticleSphere = ({ color, inView }) => {
   const points = useRef();
   const { positions, particlesCount } = useMemo(() => generateSpherePositions(), []);
   
   // Store original positions for stable displacement calculations
   const originalPositions = useMemo(() => new Float32Array(positions), [positions]);
   
+  // Frame counter for throttling — update every other frame
+  const frameCounter = useRef(0);
+  
   useFrame(({ clock }) => {
+    if (!inView) return; // Pause when not in view
     if (!points.current) return;
+    
+    // Throttle: only update particle positions every 2nd frame
+    frameCounter.current++;
+    if (frameCounter.current % 2 !== 0) {
+      // Still do rotation for smoothness
+      points.current.rotation.x += 0.001;
+      points.current.rotation.y += 0.001;
+      return;
+    }
     
     const time = clock.getElapsedTime();
     

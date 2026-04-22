@@ -1,8 +1,8 @@
 import { Canvas } from '@react-three/fiber';
 import React from 'react'
 import ParticleSphere from './NeoParticle';
-import { OrbitControls } from '@react-three/drei';
 import { useInView } from 'react-intersection-observer';
+import * as THREE from 'three';
 
 export default function Neo({color}) {
   const { ref, inView } = useInView({
@@ -13,13 +13,20 @@ export default function Neo({color}) {
   return (
     <div ref={ref} className="w-full h-full">
       {inView && (
-        <Canvas camera={{ position: [0, 0, 6] }} frameloop="always">
+        <Canvas
+          camera={{ position: [0, 0, 6] }}
+          frameloop="always"
+          dpr={[1, 1.5]}
+          gl={{
+            antialias: false,
+            powerPreference: "high-performance",
+            toneMapping: THREE.NoToneMapping,
+          }}
+        >
           <ambientLight intensity={0.5} />
-          <ParticleSphere color={color} />
-          <OrbitControls enableZoom={false} enablePan={false} />
+          <ParticleSphere color={color} inView={inView} />
         </Canvas>
       )}
     </div>
   );
 }
-

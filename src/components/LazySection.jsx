@@ -2,9 +2,9 @@
 
 import { useInView } from "react-intersection-observer";
 
-export default function LazySection({ children, minHeight = "100vh" }) {
+export default function LazySection({ children, minHeight = "100vh", persist = false }) {
   const { ref, inView } = useInView({
-    triggerOnce: true,
+    triggerOnce: persist, // persist=true keeps component alive once mounted (critical for 3D canvases)
     rootMargin: "200px 0px", // Preload a bit before it comes into view
   });
 

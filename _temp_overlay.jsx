@@ -2,25 +2,25 @@ const BENTO_COLUMNS = [
   {
     offsetTop: 0,
     cards: [
-      { id: "pc1", type: "video", videoIndex: 0, height: 420, speed: -4, expandDir: "right" },
+      { id: "pc1", type: "video", videoIndex: 0, height: 420, speed: -4, expandir: "right" },
       { id: "pc2", type: "feature", height: 260, speed: 10, icon: "⚡", title: "Real-time Preview", desc: "GPU-accelerated preview rendering with zero-latency playback at any resolution." },
-      { id: "pc3", type: "video", videoIndex: 3, height: 340, speed: -6, expandDir: "right" },
+      { id: "pc3", type: "video", videoIndex: 3, height: 340, speed: -6, expandir: "right" },
     ],
   },
   {
     offsetTop: 120,
     cards: [
       { id: "pc4", type: "feature", height: 230, speed: 7, icon: "🎨", title: "AI Color Match", desc: "Automatically match and grade colors across your entire timeline with a single click." },
-      { id: "pc5", type: "video", videoIndex: 1, height: 460, speed: -8, expandDir: "down" },
+      { id: "pc5", type: "video", videoIndex: 1, height: 460, speed: -8, expandir: "down" },
       { id: "pc6", type: "stats", height: 280, speed: 5 },
     ],
   },
   {
     offsetTop: 60,
     cards: [
-      { id: "pc7", type: "video", videoIndex: 2, height: 380, speed: -5, expandDir: "left" },
+      { id: "pc7", type: "video", videoIndex: 2, height: 380, speed: -5, expandir: "left" },
       { id: "pc8", type: "feature", height: 300, speed: 12, icon: "☁️", title: "Cloud Collaboration", desc: "Real-time team editing across the globe. Share projects, assets, and timelines seamlessly." },
-      { id: "pc9", type: "video", videoIndex: 4, height: 350, speed: -3, expandDir: "left" },
+      { id: "pc9", type: "video", videoIndex: 4, height: 350, speed: -3, expandir: "left" },
     ],
   },
 ];
@@ -37,9 +37,9 @@ function FloatingCard({ card, enterDelay }) {
     const video = VIDEOS[card.videoIndex];
     const thumbUrl = `https://img.youtube.com/vi/${getYouTubeId(video.src)}/maxresdefault.jpg`;
     
-    const isRight = card.expandDir === 'right';
-    const isLeft = card.expandDir === 'left';
-    const isDown = card.expandDir === 'down';
+    const isRight = card.expandir === 'right';
+    const isLeft = card.expandir === 'left';
+    const isDown = card.expandir === 'down';
     const originClass = isLeft ? "right-0 top-0 origin-right" : "left-0 top-0 origin-left";
 
     return (

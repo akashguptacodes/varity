@@ -1,18 +1,20 @@
 "use client";
 
-import { Suspense, useRef, useState, useCallback, useMemo } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
+import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { useTexture } from "@react-three/drei";
+import { useInView } from "react-intersection-observer";
+import CalendlyButton from "./CalendlyButton";
 
 // ---------- Card textures for the footer orbit ----------
-const baseTextures = [
-  "/timeline.png",
-  "/color-grading.png",
-  "/subtitles.png",
-  "/transitions.png",
-  "/ai-tools.png",
-  "/social-export.png",
+const TEXTURE_PATHS = [
+  "/images/orbit-12.jpg",
+  "/images/orbit-14.jpg",
+  "/images/orbit-10.jpg",
+  "/images/orbit-11.jpg",
+  "/images/orbit-13.jpg",
+  "/images/orbit-2.jpg",
 ];
 
 // Generate cards — multi-ring scattered layout matching Cosmos hero style
@@ -20,28 +22,24 @@ const FOOTER_CARD_DATA = Array.from({ length: 32 }).map((_, i) => {
   let radius, scale, angleOffset, speed, zOffset;
 
   if (i < 6) {
-    // Ring 1 (Inner)
     radius = 4.5;
     scale = 1.0;
     angleOffset = (i / 6) * Math.PI * 2;
     speed = 0.18;
     zOffset = 0;
   } else if (i < 16) {
-    // Ring 2
     radius = 8.0;
     scale = 1.25;
     angleOffset = ((i - 6) / 10) * Math.PI * 2;
     speed = 0.12;
     zOffset = -0.5;
   } else if (i < 26) {
-    // Ring 3
     radius = 12.5;
     scale = 1.55;
     angleOffset = ((i - 16) / 10) * Math.PI * 2;
     speed = 0.08;
     zOffset = -1.0;
   } else {
-    // Ring 4 (Outer)
     radius = 17.0;
     scale = 1.85;
     angleOffset = ((i - 26) / 6) * Math.PI * 2;
@@ -49,10 +47,9 @@ const FOOTER_CARD_DATA = Array.from({ length: 32 }).map((_, i) => {
     zOffset = -1.5;
   }
 
-  const tilt = Math.sin(angleOffset) * 0.12;
-  const texture = baseTextures[i % baseTextures.length];
+  const texture = TEXTURE_PATHS[i % TEXTURE_PATHS.length];
 
-  return { id: i + 1, texture, radius, angleOffset, speed, scale, tilt, zOffset };
+  return { id: i + 1, texture, radius, angleOffset, speed, scale, zOffset };
 });
 
 // ---------- Helpers ----------
@@ -60,59 +57,47 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-// ---------- 3D Scene Background ----------
-function SceneSetup() {
-  useFrame(({ scene }) => {
-    if (!scene.background || scene.background.getHexString() !== "fbfcfb") {
-      scene.background = new THREE.Color("#fbfcfb");
-      scene.fog = null;
-    }
-  });
-  return null;
-}
+// ---------- Pre-allocated temp objects (OUTSIDE component — zero GC) ----------
+const tempMatrix = new THREE.Matrix4();
+const tempVec3 = new THREE.Vector3();
+const tempQuat = new THREE.Quaternion();
+const tempScale = new THREE.Vector3();
+const tempEuler = new THREE.Euler();
 
-// ---------- Subtle Camera Rig ----------
-function CameraRig({ mousePosition }) {
-  useFrame(({ camera }) => {
-    const mx = (mousePosition?.x || 0) * 0.5;
-    const my = (mousePosition?.y || 0) * 0.5;
-    camera.position.x = lerp(camera.position.x, mx, 0.02);
-    camera.position.y = lerp(camera.position.y, my, 0.02);
-    camera.lookAt(0, 0, 0);
-  });
-  return null;
-}
+// ---------- Instanced Footer Cards (replaces 32 individual meshes) ----------
+function FooterInstancedCards({ mouseRef }) {
+  const texturesArr = useTexture(TEXTURE_PATHS);
 
-// ---------- Floating Card in R3F (identical to Hero cards) ----------
-function FooterFloatingCard({
-  texture: texturePath,
-  radius,
-  speed,
-  angleOffset,
-  zOffset = 0,
-  scale: baseScale,
-  mousePosition,
-}) {
-  const meshRef = useRef();
-  const materialRef = useRef();
-  const [hovered, setHovered] = useState(false);
-  const hoverRef = useRef(0);
-  const angleRef = useRef(angleOffset);
-  
-  // Cards closer to center are more translucent so CTA text is readable
-  const baseOpacity = radius <= 5 ? 0.35 : radius <= 9 ? 0.55 : radius <= 13 ? 0.75 : 1.0;
-  const scrollVelocityRef = useRef(0);
+  // Parse card data into groups by texture for instanced rendering
+  const groups = useMemo(() => {
+    const map = TEXTURE_PATHS.map((path, i) => ({
+      texture: texturesArr[i],
+      cards: [],
+    }));
 
-  // Intro state — spiral inward from far away
-  const currentRadius = useRef(radius + 15);
-  const currentSpeedMult = useRef(15);
+    FOOTER_CARD_DATA.forEach((card) => {
+      const idx = TEXTURE_PATHS.indexOf(card.texture);
+      if (idx !== -1) {
+        // Cards closer to center are more translucent so CTA text is readable
+        const baseOpacity = card.radius <= 5 ? 0.35 : card.radius <= 9 ? 0.55 : card.radius <= 13 ? 0.75 : 1.0;
+        map[idx].cards.push({
+          ...card,
+          baseOpacity,
+          currentRadius: card.radius + 15,
+          currentSpeedMult: 15,
+          angleRef: card.angleOffset,
+          hover: 0,
+          hoverTarget: 0,
+        });
+      }
+    });
+    return map;
+  }, [texturesArr]);
 
-  const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const refs = useRef([]);
 
-  const tex = useLoader(THREE.TextureLoader, texturePath);
-  tex.colorSpace = THREE.SRGBColorSpace;
-
-  const roundedRectShape = useMemo(() => {
+  // Shared geometry (created once, reused for all instances)
+  const sharedGeometry = useMemo(() => {
     const w = 1.4;
     const h = 0.95;
     const r = 0.15;
@@ -126,11 +111,8 @@ function FooterFloatingCard({
     shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
     shape.lineTo(-w / 2, -h / 2 + r);
     shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-    return shape;
-  }, []);
 
-  const geometry = useMemo(() => {
-    const geo = new THREE.ShapeGeometry(roundedRectShape, 32);
+    const geo = new THREE.ShapeGeometry(shape, 32);
     const pos = geo.attributes.position;
     const uvs = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) {
@@ -140,174 +122,192 @@ function FooterFloatingCard({
     geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
     geo.computeVertexNormals();
     return geo;
-  }, [roundedRectShape]);
+  }, []);
 
+  // Scroll velocity tracking
+  const scrollRef = useRef({ val: 0, lastY: typeof window !== "undefined" ? window.scrollY : 0 });
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (sharedGeometry) sharedGeometry.dispose();
+      texturesArr.forEach(t => t.dispose());
+    };
+  }, [sharedGeometry, texturesArr]);
+
+  // Single useFrame for ALL 32 cards (was 32 separate useFrame loops)
   useFrame((state, delta) => {
-    if (!meshRef.current || !materialRef.current) return;
+    let currentScrollY = 0;
+    if (typeof window !== "undefined") {
+      currentScrollY = window.scrollY;
+    }
+    const scrollDelta = Math.abs(currentScrollY - scrollRef.current.lastY);
+    scrollRef.current.lastY = currentScrollY;
+    scrollRef.current.val = lerp(scrollRef.current.val || 0, scrollDelta, 0.1);
 
-    currentRadius.current = lerp(currentRadius.current, radius, 0.04);
-    currentSpeedMult.current = lerp(currentSpeedMult.current, 1, 0.03);
+    const sVel = scrollRef.current.val;
 
-    // Scroll velocity acceleration
-    const currentScrollY = typeof window !== "undefined" ? window.scrollY : 0;
-    const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
-    lastScrollY.current = currentScrollY;
-    scrollVelocityRef.current = lerp(scrollVelocityRef.current, scrollDelta, 0.1);
+    groups.forEach((group, gIdx) => {
+      const instMesh = refs.current[gIdx];
+      if (!instMesh) return;
 
-    const dynamicSpeed = (speed * currentSpeedMult.current) + scrollVelocityRef.current * 0.05;
-    angleRef.current -= dynamicSpeed * delta;
-    const angle = angleRef.current;
+      group.cards.forEach((c, idx) => {
+        c.currentRadius = lerp(c.currentRadius, c.radius, 0.04);
+        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.03);
 
-    const worldX = currentRadius.current * Math.cos(angle);
-    const worldY = currentRadius.current * Math.sin(angle);
-    const worldZ = zOffset;
+        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.05;
 
-    const parallaxStrength = 0.5 * (1 + zOffset * 0.03);
-    const mx = (mousePosition?.x || 0) * parallaxStrength;
-    const my = (mousePosition?.y || 0) * parallaxStrength;
+        c.angleRef -= dynamicSpeed * delta;
+        const angle = c.angleRef;
 
-    hoverRef.current = lerp(hoverRef.current, hovered ? 1 : 0, 0.1);
+        const worldX = c.currentRadius * Math.cos(angle);
+        const worldY = c.currentRadius * Math.sin(angle);
+        const worldZ = c.zOffset;
 
-    meshRef.current.position.x = lerp(meshRef.current.position.x, worldX + mx, 0.1);
-    meshRef.current.position.y = lerp(meshRef.current.position.y, worldY + my, 0.1);
-    meshRef.current.position.z = lerp(meshRef.current.position.z, worldZ + hoverRef.current * 4.0, 0.1);
+        const parallaxStrength = 0.5 * (1 + c.zOffset * 0.03);
+        const mx = mouseRef.current.x * parallaxStrength;
+        const my = mouseRef.current.y * parallaxStrength;
 
-    // Radial alignment: short edge faces center
-    meshRef.current.rotation.x = 0;
-    meshRef.current.rotation.y = 0;
-    meshRef.current.rotation.z = angle;
+        c.hover = lerp(c.hover, c.hoverTarget, 0.1);
 
-    const targetScale = baseScale * (1 + hoverRef.current * 0.35);
-    meshRef.current.scale.setScalar(lerp(meshRef.current.scale.x, targetScale, 0.1));
+        const tx = worldX + mx;
+        const ty = worldY + my;
+        const tz = worldZ + c.hover * 4.0;
 
-    // Inner rings translucent, outer rings opaque
-    materialRef.current.opacity = baseOpacity;
+        tempVec3.set(tx, ty, tz);
+
+        tempEuler.set(0, 0, angle);
+        tempQuat.setFromEuler(tempEuler);
+
+        const targetScale = c.scale * (1 + c.hover * 0.35);
+        tempScale.set(targetScale, targetScale, targetScale);
+
+        tempMatrix.compose(tempVec3, tempQuat, tempScale);
+        instMesh.setMatrixAt(idx, tempMatrix);
+      });
+      instMesh.instanceMatrix.needsUpdate = true;
+    });
   });
 
   return (
-    <mesh
-      ref={meshRef}
-      geometry={geometry}
-      onPointerOver={() => {
-        setHovered(true);
-        if (typeof document !== "undefined") document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        if (typeof document !== "undefined") document.body.style.cursor = "auto";
-      }}
-    >
-      <meshStandardMaterial
-        ref={materialRef}
-        map={tex}
-        transparent
-        opacity={1}
-        side={THREE.DoubleSide}
-        roughness={0.4}
-        metalness={0.1}
-      />
-    </mesh>
+    <>
+      {groups.map((group, i) => (
+        <instancedMesh
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          args={[sharedGeometry, null, group.cards.length]}
+          onPointerOver={(e) => {
+            if (e.instanceId !== undefined) {
+              group.cards[e.instanceId].hoverTarget = 1;
+              document.body.style.cursor = "pointer";
+            }
+          }}
+          onPointerOut={(e) => {
+            if (e.instanceId !== undefined) {
+              group.cards[e.instanceId].hoverTarget = 0;
+              document.body.style.cursor = "auto";
+            }
+          }}
+        >
+          <meshBasicMaterial
+            map={group.texture}
+            side={THREE.DoubleSide}
+            transparent
+            opacity={group.cards[0]?.baseOpacity ?? 1}
+          />
+        </instancedMesh>
+      ))}
+    </>
   );
 }
 
-// ---------- Scene Content ----------
-function FooterSceneContent({ mousePosition }) {
-  return (
-    <>
-      <SceneSetup />
-      <ambientLight intensity={2.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
-      <directionalLight position={[-10, -10, -10]} intensity={1.0} color="#ffffff" />
-
-      {FOOTER_CARD_DATA.map((card) => (
-        <FooterFloatingCard
-          key={card.id}
-          texture={card.texture}
-          radius={card.radius}
-          speed={card.speed}
-          angleOffset={card.angleOffset}
-          zOffset={card.zOffset}
-          tilt={card.tilt}
-          scale={card.scale}
-          mousePosition={mousePosition}
-        />
-      ))}
-
-      <Environment preset="city" />
-      <CameraRig mousePosition={mousePosition} />
-    </>
-  );
+// ---------- Subtle Camera Rig ----------
+function CameraRig({ mouseRef }) {
+  useFrame(({ camera }) => {
+    const mx = mouseRef.current.x * 0.5;
+    const my = mouseRef.current.y * 0.5;
+    camera.position.x = lerp(camera.position.x, mx, 0.02);
+    camera.position.y = lerp(camera.position.y, my, 0.02);
+    camera.lookAt(0, 0, 0);
+  });
+  return null;
 }
 
 // ---------- Main Footer Component (Cosmos-style layout) ----------
 const FooterSection = () => {
   const currentYear = new Date().getFullYear();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  // useRef instead of useState — zero re-renders on mousemove
+  const mouseRef = useRef({ x: 0, y: 0 });
+
+  const { ref: inViewRef, inView } = useInView({
+    triggerOnce: false,
+    rootMargin: "200px 0px",
+  });
 
   const handleMouseMove = useCallback((e) => {
+    if (!inView) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    setMousePosition({ x, y });
-  }, []);
+    mouseRef.current = { x, y };
+  }, [inView]);
 
   return (
     <footer className="relative w-full bg-[#fbfcfb] overflow-hidden">
-      <style dangerouslySetInnerHTML={{__html: `
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
-      `}} />
 
       {/* ======== TOP: Full viewport 3D orbiting cards with CTA ======== */}
       <div
+        ref={inViewRef}
         className="relative w-full h-screen min-h-[600px]"
         onMouseMove={handleMouseMove}
       >
         {/* 3D Canvas — fills the entire viewport area */}
         <div className="absolute inset-0 z-0">
-          <Canvas
-            camera={{
-              position: [0, 0, 18],
-              fov: 50,
-              near: 0.1,
-              far: 100,
-            }}
-            dpr={[1, 1.5]}
-            gl={{
-              antialias: true,
-              alpha: false,
-              powerPreference: "high-performance",
-              toneMapping: THREE.NoToneMapping,
-            }}
-            style={{ background: "#fbfcfb" }}
-          >
-            <Suspense fallback={null}>
-              <FooterSceneContent mousePosition={mousePosition} />
-            </Suspense>
-          </Canvas>
+          {inView && (
+            <Canvas
+              camera={{
+                position: [0, 0, 18],
+                fov: 50,
+                near: 0.1,
+                far: 100,
+              }}
+              dpr={[1, 1.5]}
+              frameloop="always"
+              gl={{
+                antialias: false,
+                alpha: false,
+                powerPreference: "high-performance",
+                toneMapping: THREE.NoToneMapping,
+              }}
+              style={{ background: "#fbfcfb" }}
+            >
+              <color attach="background" args={["#fbfcfb"]} />
+              <Suspense fallback={null}>
+                <FooterInstancedCards mouseRef={mouseRef} />
+                <CameraRig mouseRef={mouseRef} />
+              </Suspense>
+            </Canvas>
+          )}
         </div>
 
-        {/* Center CTA — large black pill + outline button, exactly like Cosmos */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-2">
-          {/* Large black pill CTA */}
-          <div 
-            className="pointer-events-auto bg-[#042f22] text-white rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_70px_rgba(0,0,0,0.4)] hover:scale-[1.03] transition-all duration-300 cursor-pointer"
-            style={{ padding: '28px 72px' }}
+        {/* Center CTA — text + Calendly button over 3D orbit */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-2 text-center">
+          <h2 
+            className="pointer-events-auto text-[32px] md:text-[46px] lg:text-[56px] font-bold tracking-tight text-[#042f22] mb-3"
+            style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 4px 20px rgba(255,255,255,0.8)" }}
           >
-            <h2 
-              className="text-[22px] md:text-[32px] lg:text-[38px] font-bold tracking-tight text-center whitespace-nowrap"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Start editing with Varity
-            </h2>
+            Let's Work Together 🎥
+          </h2>
+          <p 
+            className="pointer-events-auto text-[#4b5563] text-[16px] md:text-[20px] font-medium max-w-xl mx-auto mb-8"
+            style={{ fontFamily: "'Inter', sans-serif", textShadow: "0 2px 10px rgba(255,255,255,0.8)" }}
+          >
+            Book a free consultation call to discuss your video project
+          </p>
+          
+          <div className="pointer-events-auto shadow-[0_15px_40px_rgba(32,201,151,0.25)] rounded-full hover:scale-105 transition-transform duration-300">
+            <CalendlyButton url="https://calendly.com/akashgupta7484/30min" inline={true} />
           </div>
-
-          {/* Outline button below */}
-          <button 
-            className="pointer-events-auto bg-white border-2 border-[#042f22]/15 rounded-full text-[14px] md:text-[16px] text-[#042f22] font-semibold hover:border-[#042f22]/40 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            style={{ marginTop: '24px', padding: '16px 40px' }}
-          >
-            Try it free
-          </button>
         </div>
       </div>
 
@@ -363,7 +363,7 @@ const FooterSection = () => {
             className="text-[#042f22] text-[16vw] md:text-[14vw] font-black leading-[0.85] tracking-tighter text-center select-none uppercase"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            VARITY
+            VERITY
           </h1>
         </div>
       </div>

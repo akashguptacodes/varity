@@ -1,16 +1,15 @@
 "use client";
 
-import { motion, useScroll, useTransform, useAnimationFrame, useMotionValue, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, useAnimationFrame, useMotionValue, AnimatePresence, useSpring } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Neo from "./Neo/Neo";
-import { getComplexColumns, getYouTubeId } from "../lib/videoUtils";
+import { getComplexColumns, getYouTubeId, getThumbnailUrl } from "../lib/videoUtils";
 
 const CATEGORIES = [
-  { id: 1, title: 'LEVITATE FILM', image: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=600&auto=format&fit=crop' },
-  { id: 2, title: 'STUDIO MOAN', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop' },
-  { id: 3, title: 'CREATIVE WORK', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=600&auto=format&fit=crop' },
-  { id: 4, title: 'DEVELOPMENT', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop' },
-  { id: 5, title: '3D EXPERIENCES', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop' },
+  { id: 1, title: 'AI Videos', image: '/images/AIvideos.png' },
+  { id: 2, title: 'Explainer', image: '/images/Explainer.png' },
+  { id: 3, title: 'Posters', image: '/images/Poster.jpg' },
+  { id: 4, title: 'Talking Head', image: '/images/TalkingHead.png' }
 ];
 
 export default function CategorySection() {
@@ -65,16 +64,7 @@ export default function CategorySection() {
       </AnimatePresence>
 
       <section ref={containerRef} className="relative w-full h-[250vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
-          @keyframes paperFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-6px) rotate(0.8deg); }
-            50% { transform: translateY(2px) rotate(-0.5deg); }
-            75% { transform: translateY(-4px) rotate(0.3deg); }
-          }
-        `}} />
+        {/* Keyframes and fonts are in globals.css */}
         <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-24 z-0">
 
           {/* Exact Replica of Typography tailored for Video Editing */}
@@ -198,7 +188,7 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
   return (
     <motion.div
       className="absolute flex flex-col justify-center items-center transform-gpu"
-      style={{ x, y, zIndex, scale, opacity, rotateY, rotateX, pointerEvents: "none", willChange: "transform, opacity" }}
+      style={{ x, y, zIndex, scale, opacity, rotateY, rotateX, pointerEvents: "none" }}
     >
       <motion.div
         className="relative group cursor-pointer pointer-events-auto transform-gpu select-none"
@@ -256,7 +246,6 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
           <motion.div
             layoutId={`card-container-${cat.id}`}
             className="relative w-[300px] h-[300px] md:w-[360px] md:h-[360px] rounded-sm shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu overflow-hidden"
-            style={{ willChange: "transform" }}
           >
             {/* Full-bleed image Ã¢â‚¬â€ no strips, no black gaps */}
             <motion.img
@@ -276,7 +265,7 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
         <motion.p
           layoutId={`card-title-${cat.id}`}
           className="absolute -top-6 left-1 text-[#042f22] text-[20px] md:text-[24px] tracking-[0.1em] font-medium uppercase z-10 transition-transform duration-500 group-hover:-translate-y-2 whitespace-nowrap transform-gpu"
-          style={{ textShadow: "0px 2px 4px rgba(255,255,255,0.8)", willChange: "transform" }}
+          style={{ textShadow: "0px 2px 4px rgba(255,255,255,0.8)" }}
         >
           {cat.title}
         </motion.p>
@@ -303,29 +292,54 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
 /* ──────────────────────────────────────────────────────────────────────────── */
 function FloatingCard({ card, enterDelay, onCardClick }) {
   const video = card;
-  const thumbUrl = `https://img.youtube.com/vi/${getYouTubeId(video.src)}/maxresdefault.jpg`;
+  const isSlideshow = video.isSlideshow;
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (isSlideshow && video.images && video.images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % video.images.length);
+      }, 2500);
+      return () => clearInterval(interval);
+    }
+  }, [isSlideshow, video]);
+
+  let thumbUrl = "";
+  if (isSlideshow && video.images && video.images.length > 0) {
+    thumbUrl = getThumbnailUrl({ thumbnail: video.images[currentIndex] });
+  } else {
+    thumbUrl = getThumbnailUrl(video);
+  }
 
   return (
     <motion.div
-      className="relative z-10 w-full rounded-[24px] overflow-hidden bg-black cursor-pointer shadow-lg border-[4px] md:border-[6px] lg:border-[8px] border-white"
-      style={{ height: card.height }}
+      className="relative z-10 w-full rounded-[24px] overflow-hidden bg-black cursor-pointer shadow-lg border-[4px] md:border-[6px] lg:border-[8px] border-white transform-gpu"
+      style={{ height: card.height, willChange: "transform, opacity" }}
       initial={{ opacity: 0, y: 60 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: enterDelay, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => onCardClick(video)}
       whileHover={{ scale: 1.02 }}
     >
       <motion.div layoutId={`hover-card-${video.id}`} className="w-full h-full relative group">
-        <img
-          src={thumbUrl}
-          loading="lazy"
-          decoding="async"
-          alt={video.title}
-          className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1113] via-transparent to-transparent opacity-60" />
-        <motion.div className="absolute bottom-6 left-7 right-7">
+        <AnimatePresence>
+          <motion.img
+            key={thumbUrl}
+            src={thumbUrl}
+            loading="lazy"
+            decoding="async"
+            alt={video.title}
+            referrerPolicy="no-referrer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1113] via-transparent to-transparent opacity-60 z-10 pointer-events-none" />
+        <motion.div className="absolute bottom-6 left-7 right-7 z-20 pointer-events-none">
           <h4 className="text-white text-[18px] md:text-[21px] font-bold tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
             {video.title}
           </h4>
@@ -375,11 +389,7 @@ function ProjectOverlay({ cat, onClose }) {
       className="fixed inset-0 z-[100] overflow-y-auto overflow-x-hidden"
       style={{ background: "#ffffff" }}
     >
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-      `}} />
+      {/* Fonts loaded via globals.css */}
 
       {/* Ambient background glows */}
       <div
@@ -389,7 +399,7 @@ function ProjectOverlay({ cat, onClose }) {
 
 
       {/* ── MASTER PADDING WRAPPER ── */}
-      <div 
+      <div
         className="w-full min-h-screen pr-8"
         style={{ paddingLeft: "max(2rem, 2vw)", paddingTop: "max(1rem, 1vh)" }}
       >
@@ -409,7 +419,7 @@ function ProjectOverlay({ cat, onClose }) {
               className="group cursor-pointer"
               style={{ marginBottom: "1rem" }}
             >
-              <div 
+              <div
                 className="flex items-center gap-1 rounded-full bg-white/60 backdrop-blur-md border border-gray-200/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover:bg-white group-hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-400 ease-out"
                 style={{ paddingTop: "12px", paddingBottom: "12px", paddingLeft: "8px", paddingRight: "28px" }}
               >
@@ -424,14 +434,14 @@ function ProjectOverlay({ cat, onClose }) {
 
             {/* Category tag */}
             <div className="flex items-center justify-start" style={{ marginBottom: "1rem" }}>
-              <div 
+              <div
                 className="flex items-center gap-3 rounded-full border border-[#20C997]/25"
-                style={{ 
+                style={{
                   background: "linear-gradient(90deg, rgba(32,201,151,0.12) 0%, rgba(32,201,151,0.02) 100%)",
-                  paddingTop: "12px", 
-                  paddingBottom: "12px", 
-                  paddingLeft: "24px", 
-                  paddingRight: "24px" 
+                  paddingTop: "12px",
+                  paddingBottom: "12px",
+                  paddingLeft: "24px",
+                  paddingRight: "24px"
                 }}
               >
                 <div className="w-2 h-2 rounded-full bg-[#20C997]" style={{ boxShadow: "0 0 8px rgba(32,201,151,0.6)" }} />
@@ -549,15 +559,18 @@ function ProjectOverlay({ cat, onClose }) {
 }
 
 function ParallaxColumnWrapper({ children, scrollYProgress, speed }) {
-  const shift = useTransform(scrollYProgress, (p) => {
-    // Start exactly at 0 shift, move at specific speeds as we scroll down
-    return p * speed * 300;
+  const rawShift = useTransform(scrollYProgress, (p) => {
+    // Increased multiplier for more dramatic parallax
+    return p * speed * 500;
   });
+  
+  // Smooth out the raw scroll value to eliminate jitter/lag
+  const smoothShift = useSpring(rawShift, { stiffness: 200, damping: 40, mass: 0.5 });
 
   return (
     <motion.div
-      style={{ y: shift, willChange: "transform" }}
-      className="flex flex-col gap-2 md:gap-4 lg:gap-5 xl:gap-8 w-full"
+      style={{ y: smoothShift, willChange: "transform" }}
+      className="flex flex-col gap-2 md:gap-4 lg:gap-5 xl:gap-8 w-full transform-gpu"
     >
       {children}
     </motion.div>
@@ -568,7 +581,25 @@ function ParallaxColumnWrapper({ children, scrollYProgress, speed }) {
 /*  CENTER HOVER MODAL – Appears on click inside ProjectOverlay              */
 /* ──────────────────────────────────────────────────────────────────────────── */
 function CenterHoverModal({ video, onClose }) {
-  const thumbUrl = `https://img.youtube.com/vi/${getYouTubeId(video.src)}/maxresdefault.jpg`;
+  const isImageOrSlideshow = video.isImage || video.isSlideshow;
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const isExpandDown = video.expandir === 'down';
+
+  useEffect(() => {
+    if (video.isSlideshow && video.images && video.images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % video.images.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [video]);
+
+  let currentMediaSrc = "";
+  if (video.isSlideshow && video.images && video.images.length > 0) {
+    currentMediaSrc = getThumbnailUrl({ thumbnail: video.images[currentIndex] });
+  } else if (video.isImage) {
+    currentMediaSrc = getThumbnailUrl(video);
+  }
 
   return (
     <motion.div
@@ -582,8 +613,13 @@ function CenterHoverModal({ video, onClose }) {
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className="relative bg-white rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.2),_0_0_0_1px_rgba(0,0,0,0.03)] flex flex-row p-4 gap-12"
-        style={{ width: "1150px", maxWidth: "90vw", height: "500px" }}
+        className={`relative bg-white rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.2),_0_0_0_1px_rgba(0,0,0,0.03)] flex ${isExpandDown ? 'flex-col' : 'flex-row'} p-4 gap-12`}
+        style={{
+          width: "1150px",
+          maxWidth: "90vw",
+          height: isExpandDown ? "auto" : "500px",
+          minHeight: isExpandDown ? "700px" : "500px"
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -594,21 +630,40 @@ function CenterHoverModal({ video, onClose }) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
-        {/* Left Side: Fully Interactive Video */}
-        <div className="w-[50%] h-full relative bg-black shrink-0 overflow-hidden rounded-[32px] shadow-lg group">
-          <iframe
-            src={`${video.src}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`}
-            className="absolute inset-0 w-full h-full"
-            loading="lazy"
-            allowFullScreen
-            allow="autoplay; encrypted-media"
-            title={video.title}
-          />
+        {/* Video/Media Section */}
+        <div className={`${isExpandDown ? 'w-full h-[400px]' : 'w-[50%] h-full'} relative bg-black shrink-0 overflow-hidden rounded-[32px] shadow-lg group`}>
+          {isImageOrSlideshow ? (
+            <AnimatePresence>
+              <motion.img
+                key={currentMediaSrc}
+                src={currentMediaSrc}
+                alt={video.title}
+                referrerPolicy="no-referrer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </AnimatePresence>
+          ) : (
+            <iframe
+              src={`${video.src}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`}
+              className="absolute inset-0 w-full h-full"
+              loading="lazy"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+              title={video.title}
+            />
+          )}
         </div>
 
-        {/* Right Side: Details with generous breathing room */}
-        <div className="w-[50%] pl-4 pr-16 flex flex-col justify-center bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-          <div className="flex items-center gap-3 mb-6">
+        {/* Details Section */}
+        <div className={`${isExpandDown ? 'w-full' : 'w-[50%]'} flex flex-col justify-center bg-white`} style={{
+          fontFamily: "'Inter', sans-serif",
+          padding: isExpandDown ? '32px 32px' : '32px 80px'
+        }}>
+          <div className="flex items-center gap-3 mb-8">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#20C997]/10 border border-[#20C997]/20">
               <div className="w-2 h-2 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 10px rgba(32,201,151,0.5)" }} />
               <span className="text-[#0d9488] text-[10px] uppercase tracking-[0.25em] font-black">
@@ -616,7 +671,7 @@ function CenterHoverModal({ video, onClose }) {
               </span>
             </div>
           </div>
-          <h4 className="text-[#042f22] text-[36px] font-bold mb-4 leading-[1.1] tracking-tight">
+          <h4 className="text-[#042f22] text-[36px] font-bold mb-6 leading-[1.1] tracking-tight">
             {video.title}
           </h4>
           <p className="text-[#6b7280] text-[16px] leading-[1.8]">

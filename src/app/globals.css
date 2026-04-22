@@ -298,3 +298,33 @@ body {
     padding: 18px 40px;
   }
 }
+
+/* ── Consolidated keyframes (moved from inline <style> tags) ── */
+@keyframes paperFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(0.8deg); }
+  50% { transform: translateY(2px) rotate(-0.5deg); }
+  75% { transform: translateY(-4px) rotate(0.3deg); }
+}
+
+@keyframes testimonialFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(0.5deg); }
+  50% { transform: translateY(4px) rotate(-0.3deg); }
+  75% { transform: translateY(-6px) rotate(0.2deg); }
+}
+
+@keyframes gentleGlow {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.05); }
+}
+
+/* ── Reduced motion accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

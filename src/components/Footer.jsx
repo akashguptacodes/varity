@@ -54,7 +54,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-[#0d7c66]/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[#1a1a2e]/25">
-            © 2026 Varity. All rights reserved.
+            © 2026 Verity. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {["Twitter", "GitHub", "Discord", "YouTube"].map((social) => (

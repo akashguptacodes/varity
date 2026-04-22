@@ -46,7 +46,7 @@ export default function Home() {
       </section>
 
       {/* Category Section with moving fluid blob */}
-      <LazySection minHeight="250vh">
+      <LazySection minHeight="250vh" persist={true}>
         <CategorySection />
       </LazySection>
 
@@ -55,13 +55,10 @@ export default function Home() {
         <TestimonialsSection />
       </LazySection>
 
-      {/* Book Call Section */}
-      <LazySection minHeight="50vh">
-        <BookCallSection />
-      </LazySection>
+
 
       {/* Footer Section */}
-      <LazySection minHeight="40vh">
+      <LazySection minHeight="40vh" persist={true}>
         <FooterSection />
       </LazySection>
 

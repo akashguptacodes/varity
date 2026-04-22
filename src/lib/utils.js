@@ -1,11 +1,11 @@
 // Base textures to cycle through
 const baseTextures = [
-  "/timeline.png",
-  "/color-grading.png",
-  "/subtitles.png",
-  "/transitions.png",
-  "/ai-tools.png",
-  "/social-export.png",
+  "/images/orbit-12.jpg",
+  "/images/orbit-14.jpg",
+  "/images/orbit-10.jpg",
+  "/images/orbit-11.jpg",
+  "/images/orbit-13.jpg",
+  "/images/orbit-2.jpg",
 ];
 
 // Generate cards arranged on clean circular rings like Cosmos
@@ -17,28 +17,28 @@ export const CARD_DATA = Array.from({ length: 44 }).map((_, i) => {
   if (i < 8) {
     // Ring 1 (Inner) — closest to centre text
     radius = 5.5;
-    scale = 0.85;
+    scale = 1.05;
     angleOffset = (i / 8) * Math.PI * 2;
     speed = 0.22;
     zOffset = 0;
   } else if (i < 20) {
     // Ring 2
     radius = 9.5;
-    scale = 1.1;
+    scale = 1.35;
     angleOffset = ((i - 8) / 12) * Math.PI * 2;
     speed = 0.15;
     zOffset = -0.5;
   } else if (i < 32) {
     // Ring 3
     radius = 14.0;
-    scale = 1.4;
+    scale = 1.75;
     angleOffset = ((i - 20) / 12) * Math.PI * 2;
     speed = 0.10;
     zOffset = -1.0;
   } else {
     // Ring 4 (Outer)
     radius = 19.0;
-    scale = 1.7;
+    scale = 2.15;
     angleOffset = ((i - 32) / 12) * Math.PI * 2;
     speed = 0.06;
     zOffset = -1.5;
@@ -80,4 +80,18 @@ export function mapRange(value, inMin, inMax, outMin, outMax) {
 // Ease in-out cubic
 export function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Throttle function to limit execution frequency
+export function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  }
 }

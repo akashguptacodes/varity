@@ -1,5 +1,5 @@
 export const generateSpherePositions = () => {
-  const particlesCount = 30000; // Increased density for a thicker visual blob
+  const particlesCount = 15000; // Optimized: reduced from 30k — visually imperceptible at size=0.03
   const positions = new Float32Array(particlesCount * 3);
   const radius = 2.3;
 

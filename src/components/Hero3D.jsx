@@ -1,87 +1,75 @@
 "use client";
 
-import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { Suspense, useRef, useCallback, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useInView } from "react-intersection-observer";
-import FloatingVideoCard from "./FloatingVideoCard";
-import { CARD_DATA, lerp } from "@/lib/utils";
+import { CARD_DATA, lerp, throttle } from "@/lib/utils";
 
-// The 6 base textures used by the cards
 const TEXTURE_PATHS = [
-  "/timeline.png",
-  "/color-grading.png",
-  "/subtitles.png",
-  "/transitions.png",
-  "/ai-tools.png",
-  "/social-export.png",
+  "/images/orbit-12.jpg",
+  "/images/orbit-14.jpg",
+  "/images/orbit-10.jpg",
+  "/images/orbit-11.jpg",
+  "/images/orbit-13.jpg",
+  "/images/orbit-2.jpg",
 ];
 
-// Set scene background to light color (matching Cosmos)
-function SceneSetup() {
-  useFrame(({ scene }) => {
-    if (!scene.background || scene.background.getHexString() !== "fbfcfb") {
-      scene.background = new THREE.Color("#fbfcfb");
-      scene.fog = null; // Completely remove any fog
-    }
-  });
-  return null;
-}
+const tempMatrix = new THREE.Matrix4();
+const vec3 = new THREE.Vector3();
+const quaternion = new THREE.Quaternion();
+const scaleVec = new THREE.Vector3();
+const reusableEuler = new THREE.Euler();
 
-// Subtle camera parallax to give the entire scene some depth when moving the mouse
-function CameraRig({ mousePosition }) {
+// Scene background directly handled by <color> attachment
+
+function CameraRig({ mouseRef }) {
   useFrame((state) => {
     const { camera } = state;
-    const mx = (mousePosition?.x || 0) * 0.5;
-    const my = (mousePosition?.y || 0) * 0.5;
+    const mx = mouseRef.current.x * 0.5;
+    const my = mouseRef.current.y * 0.5;
 
     camera.position.x += (mx - camera.position.x) * 0.02;
     camera.position.y += (my - camera.position.y) * 0.02;
     camera.lookAt(0, 0, 0);
   });
-
   return null;
 }
 
-// Global Scroll Tracker Component
-// Computes velocity once per frame and writes to a shared mutable ref
-function ScrollTracker({ scrollVelocityRef }) {
-  const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
-
-  useFrame(() => {
-    if (typeof window === "undefined") return;
-    const currentScrollY = window.scrollY;
-    const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
-    lastScrollY.current = currentScrollY;
-    
-    // Smooth the scroll velocity heavily
-    scrollVelocityRef.current = lerp(scrollVelocityRef.current, scrollDelta, 0.1);
-  });
-
-  return null;
-}
-
-// Scene content
-function SceneContent({ mousePosition }) {
-  const scrollVelocityRef = useRef(0);
-
-  // Preload textures once
+function InstancedCards({ scrollVelocityRef, mouseRef }) {
   const texturesArr = useTexture(TEXTURE_PATHS);
-  const textureMap = useMemo(() => {
-    const map = {};
-    TEXTURE_PATHS.forEach((path, i) => {
-      texturesArr[i].colorSpace = THREE.SRGBColorSpace;
-      map[path] = texturesArr[i];
+
+  // Parse card data into exact order for instances
+  const groups = useMemo(() => {
+    const map = TEXTURE_PATHS.map((path, i) => ({
+      texture: texturesArr[i],
+      cards: [],
+    }));
+    
+    CARD_DATA.forEach((card) => {
+      const idx = TEXTURE_PATHS.indexOf(card.texture);
+      if (idx !== -1) {
+        map[idx].cards.push({
+          ...card,
+          currentRadius: card.radius + 15,
+          currentSpeedMult: 15,
+          angleRef: card.angleOffset,
+          hover: 0,
+          hoverTarget: 0,
+        });
+      }
     });
     return map;
   }, [texturesArr]);
 
-  // Compute Geometry once for all 44 cards
+  const refs = useRef([]);
+
+  // Compute Geometry once
   const sharedGeometry = useMemo(() => {
     const w = 1.4;
     const h = 0.95;
-    const r = 0.15; // smoother corners
+    const r = 0.15;
     const shape = new THREE.Shape();
     shape.moveTo(-w / 2 + r, -h / 2);
     shape.lineTo(w / 2 - r, -h / 2);
@@ -105,54 +93,114 @@ function SceneContent({ mousePosition }) {
     return geo;
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (sharedGeometry) sharedGeometry.dispose();
+      texturesArr.forEach(t => t.dispose());
+    };
+  }, [sharedGeometry, texturesArr]);
+
+  useFrame((state, delta) => {
+    let currentScrollY = 0;
+    if (typeof window !== "undefined") {
+      currentScrollY = window.scrollY;
+    }
+    const lastScrollY = scrollVelocityRef.current.lastY || 0;
+    const scrollDelta = Math.abs(currentScrollY - lastScrollY);
+    scrollVelocityRef.current.lastY = currentScrollY;
+    scrollVelocityRef.current.val = lerp(scrollVelocityRef.current.val || 0, scrollDelta, 0.1);
+
+    const sVel = scrollVelocityRef.current.val;
+
+    groups.forEach((group, gIdx) => {
+      const instMesh = refs.current[gIdx];
+      if (!instMesh) return;
+
+      group.cards.forEach((c, idx) => {
+        c.currentRadius = lerp(c.currentRadius, c.radius, 0.04);
+        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.03);
+
+        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.1;
+
+        c.angleRef -= dynamicSpeed * delta;
+        const angle = c.angleRef;
+
+        const worldX = c.currentRadius * Math.cos(angle);
+        const worldY = c.currentRadius * Math.sin(angle);
+        const worldZ = c.zOffset;
+
+        const parallaxStrength = 0.5 * (1 + c.zOffset * 0.03);
+        const mx = mouseRef.current.x * parallaxStrength;
+        const my = mouseRef.current.y * parallaxStrength;
+
+        c.hover = lerp(c.hover, c.hoverTarget, 0.1);
+
+        const tx = worldX + mx;
+        const ty = worldY + my;
+        const tz = worldZ + c.hover * 4.0;
+
+        vec3.set(tx, ty, tz);
+        
+        reusableEuler.set(0, 0, angle);
+        quaternion.setFromEuler(reusableEuler);
+
+        const baseScale = c.scale;
+        const targetScale = baseScale * (1 + c.hover * 0.35);
+        scaleVec.set(targetScale, targetScale, targetScale);
+
+        tempMatrix.compose(vec3, quaternion, scaleVec);
+        instMesh.setMatrixAt(idx, tempMatrix);
+      });
+      instMesh.instanceMatrix.needsUpdate = true;
+    });
+  });
+
   return (
     <>
-      <SceneSetup />
-      <ScrollTracker scrollVelocityRef={scrollVelocityRef} />
-
-      {/* Very clean, bright lighting setup without shadows */}
-      <ambientLight intensity={2.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
-      <directionalLight position={[-10, -10, -10]} intensity={1.0} color="#ffffff" />
-
-      {/* Render all scattered floating cards */}
-      {CARD_DATA.map((card, i) => (
-        <FloatingVideoCard
-          key={card.id}
-          texture={textureMap[card.texture]}
-          geometry={sharedGeometry}
-          scrollVelocityRef={scrollVelocityRef}
-          radius={card.radius}
-          speed={card.speed}
-          angleOffset={card.angleOffset}
-          zOffset={card.zOffset}
-          tilt={card.tilt}
-          scale={card.scale}
-          index={i}
-          mousePosition={mousePosition}
-        />
+      {groups.map((group, i) => (
+        <instancedMesh
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          args={[sharedGeometry, null, group.cards.length]}
+          onPointerOver={(e) => {
+            if (e.instanceId !== undefined) {
+              group.cards[e.instanceId].hoverTarget = 1;
+              document.body.style.cursor = "pointer";
+            }
+          }}
+          onPointerOut={(e) => {
+            if (e.instanceId !== undefined) {
+              group.cards[e.instanceId].hoverTarget = 0;
+              document.body.style.cursor = "auto";
+            }
+          }}
+        >
+          <meshBasicMaterial
+            map={group.texture}
+            side={THREE.DoubleSide}
+            transparent={false}
+          />
+        </instancedMesh>
       ))}
-
-      <Environment preset="city" />
-      <CameraRig mousePosition={mousePosition} />
     </>
   );
 }
 
 export default function Hero3D() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const scrollVelocityRef = useRef({ val: 0, lastY: 0 });
+  
   const { ref: containerRef, inView } = useInView({
-    triggerOnce: false, // track consistently
+    triggerOnce: false,
     rootMargin: "0px",
   });
 
-  const handleMouseMove = useCallback((e) => {
-    // Only track mouse if in view
+  const handleMouseMove = useCallback(throttle((e) => {
     if (!inView) return;
     const x = (e.clientX / window.innerWidth) * 2 - 1;
     const y = -(e.clientY / window.innerHeight) * 2 + 1;
-    setMousePosition({ x, y });
-  }, [inView]);
+    mouseRef.current = { x, y };
+  }, 16), [inView]);
 
   return (
     <div
@@ -164,23 +212,25 @@ export default function Hero3D() {
         {inView && (
           <Canvas
             camera={{
-              position: [0, 0, 18], // Pulled further back to survey the vast 3D field
+              position: [0, 0, 18],
               fov: 50,
               near: 0.1,
               far: 100,
             }}
-            dpr={[1, 1.5]}
+            dpr={[1, typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1]}
             frameloop="always"
             gl={{
-              antialias: true,
+              antialias: false,
               alpha: false,
               powerPreference: "high-performance",
               toneMapping: THREE.NoToneMapping,
             }}
             style={{ background: "#fbfcfb" }}
           >
+            <color attach="background" args={["#fbfcfb"]} />
             <Suspense fallback={null}>
-              <SceneContent mousePosition={mousePosition} />
+              <CameraRig mouseRef={mouseRef} />
+              <InstancedCards scrollVelocityRef={scrollVelocityRef} mouseRef={mouseRef} />
             </Suspense>
           </Canvas>
         )}
