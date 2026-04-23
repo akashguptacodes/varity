@@ -7,8 +7,11 @@ import {
   useMotionValue,
   useTransform,
   wrap,
+  useAnimationFrame,
   animate,
 } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import useDeviceDetect from "@/hooks/useDeviceDetect";
 
 const testimonials = [
   {
@@ -60,12 +63,24 @@ const testimonials = [
 
 const items = [...testimonials, ...testimonials];
 
-const TestimonialsSection = () => {
+export default function TestimonialsSection() {
+  const { isMobile } = useDeviceDetect();
+  const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef(null);
   const baseX = useMotionValue(0);
   const itemWidth = 300;
-  const [isHovered, setIsHovered] = useState(false);
   const slideTargetRef = useRef(null);
+  
+  const { ref: inViewRef, inView } = useInView({
+    rootMargin: "200px 0px",
+  });
+
+  const setRefs = (node) => {
+    containerRef.current = node;
+    inViewRef(node);
+  };
+
+
 
   const slide = (direction) => {
     // Resolve intended destination cleanly to allow rapid stacking
@@ -87,7 +102,7 @@ const TestimonialsSection = () => {
 
   return (
     <section
-      className="relative w-full h-screen mt-32 lg:mt-48 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-center border-t border-[#0d7c66]/15"
+      className="relative w-full min-h-[80vh] sm:min-h-screen mt-16 sm:mt-24 lg:mt-48 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-center border-t border-[#0d7c66]/15 py-12 sm:py-0"
     >
       {/* Keyframes and fonts are in globals.css */}
 
@@ -101,14 +116,14 @@ const TestimonialsSection = () => {
 
       {/* Header */}
       <motion.div
-        className="text-center mb-16 z-20 relative flex flex-col items-center"
+        className="text-center mb-8 sm:mb-12 md:mb-16 z-20 relative flex flex-col items-center px-4"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
       >
         <motion.h2
-          className="text-transparent bg-clip-text bg-gradient-to-r from-[#0d7c66] via-[#20C997] to-[#0d7c66] text-[45px] md:text-[65px] leading-[1.02] tracking-tight mb-6 uppercase font-black"
+          className="text-transparent bg-clip-text bg-gradient-to-r from-[#0d7c66] via-[#20C997] to-[#0d7c66] text-[28px] sm:text-[36px] md:text-[50px] lg:text-[65px] leading-[1.02] tracking-tight mb-4 sm:mb-6 uppercase font-black"
           style={{ fontFamily: "'Playfair Display', serif" }}
           initial={{ scale: 0.9 }}
           whileInView={{ scale: 1 }}
@@ -118,7 +133,7 @@ const TestimonialsSection = () => {
           Client Feedback
         </motion.h2>
         <motion.p
-          className="text-[#0d7c66] text-[17px] md:text-[20px] uppercase tracking-[0.25em] font-bold max-w-3xl px-6 leading-relaxed"
+          className="text-[#0d7c66] text-[13px] sm:text-[15px] md:text-[17px] lg:text-[20px] uppercase tracking-[0.15em] sm:tracking-[0.25em] font-bold max-w-3xl px-4 sm:px-6 leading-relaxed"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -138,12 +153,12 @@ const TestimonialsSection = () => {
       </motion.div>
 
       {/* Enhanced carousel container with better spacing */}
-      <div className="relative flex items-center justify-center w-full max-w-[980px] mx-auto h-[620px] z-10 px-8">
+      <div className="relative flex items-center justify-center w-full max-w-[980px] mx-auto h-[480px] sm:h-[560px] md:h-[620px] z-10 px-4 sm:px-8">
 
         {/* Left Arrow */}
         <motion.button
           onClick={() => slide(1)}
-          className="absolute left-0 lg:-left-20 z-50 w-16 h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
+          className="absolute left-2 sm:left-0 lg:-left-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_8px_25px_rgba(4,47,34,0.15)] sm:shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
           whileHover={{
             scale: 1.1,
             background: "linear-gradient(135deg, #EFF8F6 0%, #20C997 100%)"
@@ -156,7 +171,7 @@ const TestimonialsSection = () => {
           </svg>
         </motion.button>
 
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,3%,black_97%,transparent)] rounded-[40px]" ref={containerRef}>
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,3%,black_97%,transparent)] rounded-[40px]" ref={setRefs}>
           <div className="relative w-full h-full flex items-center justify-center p-4">
             {items.map((item, index) => (
               <Card
@@ -167,6 +182,7 @@ const TestimonialsSection = () => {
                 totalItems={items.length}
                 itemWidth={itemWidth}
                 setIsHovered={setIsHovered}
+                isMobile={isMobile}
               />
             ))}
           </div>
@@ -175,7 +191,7 @@ const TestimonialsSection = () => {
         {/* Right Arrow */}
         <motion.button
           onClick={() => slide(-1)}
-          className="absolute right-0 lg:-right-20 z-50 w-16 h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
+          className="absolute right-2 sm:right-0 lg:-right-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_8px_25px_rgba(4,47,34,0.15)] sm:shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
           whileHover={{
             scale: 1.1,
             background: "linear-gradient(135deg, #EFF8F6 0%, #20C997 100%)"
@@ -192,7 +208,7 @@ const TestimonialsSection = () => {
   );
 };
 
-const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
+const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobile }) => {
   const totalWidth = itemWidth * totalItems;
 
   const xTransform = useTransform(baseX, (v) => {
@@ -216,17 +232,18 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
       onMouseEnter={() => setIsHovered?.(true)}
       onMouseLeave={() => setIsHovered?.(false)}
       style={{
-        width: 380,
+        width: typeof window !== 'undefined' && window.innerWidth < 640 ? 280 : 380,
         x: xTransform,
         scale,
         opacity,
         zIndex,
-        height: 520,
+        height: typeof window !== 'undefined' && window.innerWidth < 640 ? 420 : 520,
         willChange: "transform, opacity",
       }}
-      className="absolute top-10 transform-gpu flex items-center justify-center"
+      className="absolute top-4 sm:top-10 transform-gpu flex items-center justify-center"
     >
       <Tilt
+        tiltEnable={!isMobile}
         tiltMaxAngleX={15}
         tiltMaxAngleY={15}
         scale={1.05}
@@ -244,8 +261,8 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
           <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white to-[#F4FCF8] shadow-[inset_0_0_0_1px_rgba(32,201,151,0.08)]" />
 
           <div 
-            className="relative z-10 w-full h-full rounded-[32px] border border-[#20C997]/15 bg-white shadow-[0_18px_50px_-25px_rgba(4,47,34,0.2)] flex flex-col justify-between"
-            style={{ padding: "32px" }}
+            className="relative z-10 w-full h-full rounded-[24px] sm:rounded-[32px] border border-[#20C997]/15 bg-white shadow-[0_12px_35px_-18px_rgba(4,47,34,0.15)] sm:shadow-[0_18px_50px_-25px_rgba(4,47,34,0.2)] flex flex-col justify-between"
+            style={{ padding: "clamp(20px, 3vw, 32px)" }}
           >
           <div>
             <div className="flex items-center gap-1 mb-6">
@@ -256,10 +273,10 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
               ))}
             </div>
 
-            <p className="text-[#042f22] font-semibold text-[18px] md:text-[20px] leading-snug mb-4">
+            <p className="text-[#042f22] font-semibold text-[15px] sm:text-[18px] md:text-[20px] leading-snug mb-3 sm:mb-4">
               "{item.headline}"
             </p>
-            <p className="text-gray-600 text-[15px] leading-relaxed mb-8">
+            <p className="text-gray-600 text-[13px] sm:text-[14px] md:text-[15px] leading-relaxed mb-4 sm:mb-8 line-clamp-4 sm:line-clamp-none">
               {item.text}
             </p>
           </div>
@@ -281,5 +298,3 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered }) => {
     </motion.div>
   );
 };
-
-export default TestimonialsSection;

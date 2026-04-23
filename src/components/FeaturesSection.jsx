@@ -27,7 +27,7 @@ const itemVariants = {
 
 export default function FeaturesSection() {
   return (
-    <section className="relative z-20 bg-gradient-to-b from-transparent via-white/95 to-white pt-32 pb-24">
+    <section className="relative z-20 bg-gradient-to-b from-transparent via-white/95 to-white" style={{ paddingTop: 'clamp(60px, 10vw, 128px)', paddingBottom: 'clamp(60px, 10vw, 96px)' }}>
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <motion.div
@@ -41,8 +41,8 @@ export default function FeaturesSection() {
             Features
           </span>
           <h2
-            className="text-4xl md:text-5xl font-bold tracking-tight mb-5 text-[#1a1a2e]"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            className="font-bold tracking-tight mb-5 text-[#1a1a2e]"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(32px, 5vw, 48px)' }}
           >
             Everything you need to{" "}
             <span className="text-gradient">create</span>

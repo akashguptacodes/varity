@@ -1,5 +1,5 @@
-export const generateSpherePositions = () => {
-  const particlesCount = 15000; // Optimized: reduced from 30k — visually imperceptible at size=0.03
+export const generateSpherePositions = (count) => {
+  const particlesCount = count || 15000; // Default 15k desktop, configurable for mobile
   const positions = new Float32Array(particlesCount * 3);
   const radius = 2.3;
 

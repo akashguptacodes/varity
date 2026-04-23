@@ -2,9 +2,9 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { generateSpherePositions } from './NeoUtils/sphere';
 
-const ParticleSphere = ({ color, inView }) => {
+const ParticleSphere = ({ color, inView, isMobile = false }) => {
   const points = useRef();
-  const { positions, particlesCount } = useMemo(() => generateSpherePositions(), []);
+  const { positions, particlesCount } = useMemo(() => generateSpherePositions(isMobile ? 2000 : undefined), [isMobile]);
   
   // Store original positions for stable displacement calculations
   const originalPositions = useMemo(() => new Float32Array(positions), [positions]);
@@ -16,9 +16,10 @@ const ParticleSphere = ({ color, inView }) => {
     if (!inView) return; // Pause when not in view
     if (!points.current) return;
     
-    // Throttle: only update particle positions every 2nd frame
+    // Throttle: update every 3rd frame on mobile, every 2nd on desktop
     frameCounter.current++;
-    if (frameCounter.current % 2 !== 0) {
+    const skipFrames = isMobile ? 3 : 2;
+    if (frameCounter.current % skipFrames !== 0) {
       // Still do rotation for smoothness
       points.current.rotation.x += 0.001;
       points.current.rotation.y += 0.001;

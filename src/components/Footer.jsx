@@ -11,7 +11,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative z-20 bg-[#f8faf9] border-t border-[#0d7c66]/8 pt-16 pb-8">
+    <footer className="relative z-20 bg-[#f8faf9] border-t border-[#0d7c66]/8" style={{ paddingTop: 'clamp(40px, 8vw, 64px)', paddingBottom: 'clamp(24px, 4vw, 32px)' }}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
           {/* Brand */}
@@ -23,7 +23,7 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-lg font-bold text-[#1a1a2e]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Varity
+                Verity
               </span>
             </div>
             <p className="text-sm text-[#1a1a2e]/35 leading-relaxed">

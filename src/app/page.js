@@ -37,7 +37,7 @@ const CalendlyButton = dynamic(() => import("@/components/CalendlyButton"), {
 export default function Home() {
   return (
     <main className="relative bg-[#fbfcfb]">
-      <section className="relative w-full h-screen overflow-hidden">
+      <section className="relative w-full h-[100dvh] overflow-hidden">
         {/* 3D Canvas Background (Absolute behind everything) */}
         <Hero3D />
 

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function CTASection() {
   return (
-    <section className="relative z-20 bg-white py-32 overflow-hidden">
+    <section className="relative z-20 bg-white overflow-hidden" style={{ paddingTop: 'clamp(80px, 15vw, 128px)', paddingBottom: 'clamp(80px, 15vw, 128px)' }}>
       {/* Background glow — soft green */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-[#0d7c66]/6 blur-[120px]" />
@@ -19,14 +19,14 @@ export default function CTASection() {
           transition={{ duration: 0.7 }}
         >
           <h2
-            className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-[#1a1a2e]"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            className="font-bold tracking-tight mb-6 text-[#1a1a2e]"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.1 }}
           >
             Ready to create{" "}
             <span className="text-gradient">something amazing</span>?
           </h2>
           <p className="text-lg text-[#1a1a2e]/40 mb-10 max-w-2xl mx-auto">
-            Join thousands of creators using Varity to produce stunning videos in minutes, not hours.
+            Join thousands of creators using Verity to produce stunning videos in minutes, not hours.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

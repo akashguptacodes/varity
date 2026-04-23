@@ -2,8 +2,10 @@
 
 import { motion, useScroll, useTransform, useAnimationFrame, useMotionValue, AnimatePresence, useSpring } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import Neo from "./Neo/Neo";
 import { getComplexColumns, getYouTubeId, getThumbnailUrl } from "../lib/videoUtils";
+import useDeviceDetect from "@/hooks/useDeviceDetect";
 
 const CATEGORIES = [
   { id: 1, title: 'AI Videos', image: '/images/AIvideos.png' },
@@ -14,12 +16,24 @@ const CATEGORIES = [
 
 export default function CategorySection() {
   const containerRef = useRef(null);
+  const { isMobile, isTablet } = useDeviceDetect();
 
   // Track scroll inside the 150vh container for smooth sticky animation
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
   });
+
+  // Track if section is visible to pause animations
+  const { ref: inViewRef, inView } = useInView({
+    rootMargin: "200px 0px",
+  });
+
+  // Merge refs
+  const setRefs = (node) => {
+    containerRef.current = node;
+    inViewRef(node);
+  };
 
   // Layout morphing state
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -47,30 +61,29 @@ export default function CategorySection() {
   const autoAngle = useMotionValue(0);
 
   useAnimationFrame((t, delta) => {
+    if (!inView) return; // HUGE perf gain: pause CPU math when off-screen
     const baseSpeed = 0.008;
     autoAngle.set(autoAngle.get() + baseSpeed * delta * 0.5);
   });
 
   const wheelTimeout = useRef(null);
+  const touchRef = useRef({ startX: 0, lastX: 0, active: false });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    // ── Desktop: horizontal wheel to rotate orbit ──
     const handleWheel = (e) => {
-      // If the scroll is predominantly horizontal, we use it to rotate the orbit
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         e.preventDefault();
-        // Inverted direction (left swipe moves cards left)
         dragAngle.set(dragAngle.get() + e.deltaX * 0.2);
 
-        // Add dynamic tilt effect based on wheel swipe speed
         const tiltZ = Math.max(-12, Math.min(12, e.deltaX * 0.15));
         const tiltX = Math.max(-10, Math.min(10, Math.abs(e.deltaX) * 0.05));
         dragTiltZ.set(tiltZ);
         dragTiltX.set(tiltX);
 
-        // Spring settle back to flat
         const springBack = (mv, target) => {
           const step = () => {
             const current = mv.get();
@@ -89,9 +102,64 @@ export default function CategorySection() {
       }
     };
 
-    // passive: false is required to allow e.preventDefault()
+    // ── Mobile: touch swipe to rotate orbit ──
+    const handleTouchStart = (e) => {
+      if (!e.touches[0]) return;
+      touchRef.current.startX = e.touches[0].clientX;
+      touchRef.current.startY = e.touches[0].clientY;
+      touchRef.current.lastX = e.touches[0].clientX;
+      touchRef.current.active = true;
+    };
+
+    const handleTouchMove = (e) => {
+      if (!touchRef.current.active || !e.touches[0]) return;
+      const currentX = e.touches[0].clientX;
+      const currentY = e.touches[0].clientY;
+      const deltaX = currentX - touchRef.current.lastX;
+      const totalDeltaX = Math.abs(currentX - touchRef.current.startX);
+      const totalDeltaY = Math.abs(currentY - touchRef.current.startY);
+
+      // If swiping horizontally, prevent default vertical scrolling to capture the swipe
+      if (totalDeltaX > totalDeltaY && totalDeltaX > 5) {
+        if (e.cancelable) e.preventDefault();
+      }
+
+      touchRef.current.lastX = currentX;
+
+      // Rotate orbit based on horizontal swipe distance (inverted for natural swipe)
+      dragAngle.set(dragAngle.get() - deltaX * 0.6);
+
+      // Subtle tilt during swipe
+      const tiltZ = Math.max(-8, Math.min(8, -deltaX * 0.3));
+      dragTiltZ.set(tiltZ);
+    };
+
+    const handleTouchEnd = () => {
+      touchRef.current.active = false;
+      // Spring tilt back to zero
+      const springBack = (mv, target) => {
+        const step = () => {
+          const current = mv.get();
+          const next = current + (target - current) * 0.15;
+          mv.set(Math.abs(next - target) < 0.1 ? target : next);
+          if (Math.abs(next - target) > 0.1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      };
+      springBack(dragTiltZ, 0);
+      springBack(dragTiltX, 0);
+    };
+
     el.addEventListener("wheel", handleWheel, { passive: false });
-    return () => el.removeEventListener("wheel", handleWheel);
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
   }, [dragAngle, dragTiltX, dragTiltZ]);
 
   return (
@@ -106,26 +174,26 @@ export default function CategorySection() {
         )}
       </AnimatePresence>
 
-      <section ref={containerRef} className="relative w-full h-[150vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
+      <section ref={setRefs} className="relative w-full h-[150vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
         {/* Keyframes and fonts are in globals.css */}
-        <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-24 z-0">
+        <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0">
 
-          {/* Exact Replica of Typography tailored for Video Editing */}
+          {/* Large background text — made visible on mobile with lower opacity to prevent clash */}
           <div
             className="absolute inset-0 flex items-center justify-start pointer-events-none z-0 pl-[4vw]"
           >
             <div
-              className="flex flex-col text-[16vw] md:text-[9.5vw] leading-[0.95] tracking-tight text-[#064e3b] opacity-[0.85] drop-shadow-md select-none -translate-y-[8vh]"
+              className="flex flex-col text-[14vw] sm:text-[12vw] md:text-[9.5vw] leading-[0.95] tracking-tight text-[#064e3b] opacity-40 md:opacity-[0.85] drop-shadow-md select-none -translate-y-[4vh] md:-translate-y-[8vh]"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              <motion.span className="self-start pl-[8vw] md:pl-[6vw] transform-gpu block" style={{ y: textY1, willChange: "transform" }}>cinematic</motion.span>
-              <motion.span className="self-start pl-[2vw] md:pl-[1vw] transform-gpu block" style={{ y: textY2, willChange: "transform" }}>video</motion.span>
-              <motion.span className="self-start pl-[10vw] md:pl-[8vw] transform-gpu block" style={{ y: textY3, willChange: "transform" }}>editing</motion.span>
+              <motion.span className="self-start pl-[6vw] transform-gpu block" style={{ y: textY1, willChange: "transform" }}>cinematic</motion.span>
+              <motion.span className="self-start pl-[1vw] transform-gpu block" style={{ y: textY2, willChange: "transform" }}>video</motion.span>
+              <motion.span className="self-start pl-[8vw] transform-gpu block" style={{ y: textY3, willChange: "transform" }}>editing</motion.span>
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center min-h-[600px] w-full max-w-6xl z-10" style={{ perspective: "1600px" }}>
-            <div className="absolute w-[800px] h-[800px] bg-[#20C997] opacity-[0.10] blur-[150px] rounded-full pointer-events-none transform-gpu" />
+          <div className="relative flex items-center justify-center min-h-[350px] sm:min-h-[450px] md:min-h-[600px] w-full max-w-6xl z-10" style={{ perspective: "1600px" }}>
+            <div className="absolute w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] md:w-[800px] md:h-[800px] bg-[#20C997] opacity-[0.10] blur-[80px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none transform-gpu" />
 
             <motion.div className="absolute inset-0 flex items-center justify-center">
               <motion.div
@@ -133,7 +201,7 @@ export default function CategorySection() {
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
               >
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-                  <div className="w-[400px] h-[400px] sm:w-[550px] sm:h-[550px] md:w-[680px] md:h-[680px] relative flex justify-center items-center">
+                  <div className="w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] md:w-[550px] md:h-[550px] lg:w-[680px] lg:h-[680px] relative flex justify-center items-center">
                     <Neo color="#20C997" />
                   </div>
                 </div>
@@ -161,15 +229,15 @@ export default function CategorySection() {
             </motion.div>
           </div>
 
-          {/* SWIPE INDICATOR */}
+          {/* SWIPE INDICATOR – positioned above Calendly button on mobile */}
           <motion.div
-            className="absolute bottom-1 inset-x-0 flex flex-col items-center justify-center z-[60] pointer-events-none"
+            className="absolute bottom-16 sm:bottom-4 inset-x-0 flex flex-col items-center justify-center z-[60] pointer-events-none px-4"
             style={{ opacity: introOpacity }}
           >
-            <div className="flex items-center gap-3 text-white bg-gradient-to-r from-[#0d7c66] to-[#20C997] px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_30px_rgba(32,201,151,0.4)] animate-bounce">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-              <span className="text-[12px] md:text-[14px] uppercase tracking-[0.2em] font-bold drop-shadow-md" style={{ fontFamily: "'Inter', sans-serif" }}>Swipe to Rotate</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            <div className="flex items-center gap-2 sm:gap-3 text-white bg-gradient-to-r from-[#0d7c66] to-[#20C997] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full border border-white/20 shadow-[0_8px_30px_rgba(32,201,151,0.4)] animate-bounce">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              <span className="text-[11px] sm:text-[12px] md:text-[14px] uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold drop-shadow-md" style={{ fontFamily: "'Inter', sans-serif" }}>Swipe to Rotate</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </motion.div>
         </div>
@@ -184,15 +252,40 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
     return (index * (360 / numItems)) + autoAngle.get() + scrollAngle.get() + dragAngle.get();
   });
 
+  // Reactive orbit radius – updates on resize
+  const [orbitRadius, setOrbitRadius] = useState(520);
+  const [orbitYDepth, setOrbitYDepth] = useState(120);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 480) {
+        setOrbitRadius(140);
+        setOrbitYDepth(50);
+      } else if (w < 768) {
+        setOrbitRadius(150);
+        setOrbitYDepth(60);
+      } else if (w < 1024) {
+        setOrbitRadius(340);
+        setOrbitYDepth(100);
+      } else {
+        setOrbitRadius(520);
+        setOrbitYDepth(120);
+      }
+    };
+    update();
+    window.addEventListener('resize', update, { passive: true });
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   const x = useTransform(() => {
     const rad = (combinedAngle.get() * Math.PI) / 180;
-    return Math.cos(rad) * 520;
+    return Math.cos(rad) * orbitRadius;
   });
 
   const y = useTransform(() => {
     const rad = (combinedAngle.get() * Math.PI) / 180;
-    const baseEllipticalY = Math.sin(rad) * 120;
-    const tiltOffset = Math.cos(rad) * 120;
+    const baseEllipticalY = Math.sin(rad) * orbitYDepth;
+    const tiltOffset = Math.cos(rad) * orbitYDepth;
     return baseEllipticalY + tiltOffset + introY.get();
   });
 
@@ -268,7 +361,7 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
           {/* Core LayoutId tracking node Ã¢â‚¬â€ card body with full-bleed image */}
           <motion.div
             layoutId={`card-container-${cat.id}`}
-            className="relative w-[300px] h-[300px] md:w-[360px] md:h-[360px] rounded-sm shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu overflow-hidden"
+            className="relative w-[160px] h-[160px] sm:w-[220px] sm:h-[220px] md:w-[300px] md:h-[300px] lg:w-[360px] lg:h-[360px] rounded-sm shadow-[0_10px_25px_-6px_rgba(0,0,0,0.35)] sm:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu overflow-hidden"
           >
             {/* Full-bleed image Ã¢â‚¬â€ no strips, no black gaps */}
             <motion.img
@@ -287,14 +380,14 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
         {/* Shared Layout Titles morph outwards beautifully */}
         <motion.p
           layoutId={`card-title-${cat.id}`}
-          className="absolute -top-6 left-1 text-[#042f22] text-[20px] md:text-[24px] tracking-[0.1em] font-medium uppercase z-10 transition-transform duration-500 group-hover:-translate-y-2 whitespace-nowrap transform-gpu"
+          className="absolute -top-5 sm:-top-6 left-1 text-[#042f22] text-[12px] sm:text-[16px] md:text-[20px] lg:text-[24px] tracking-[0.1em] font-medium uppercase z-10 transition-transform duration-500 group-hover:-translate-y-2 whitespace-nowrap transform-gpu"
           style={{ textShadow: "0px 2px 4px rgba(255,255,255,0.8)" }}
         >
           {cat.title}
         </motion.p>
 
         <p
-          className="absolute -bottom-6 right-2 text-[#064e3b] text-[14px] md:text-[15px] tracking-widest uppercase font-medium transition-all duration-300 group-hover:text-[#042f22] group-hover:translate-y-1 transform-gpu"
+          className="absolute -bottom-5 sm:-bottom-6 right-2 text-[#064e3b] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[15px] tracking-widest uppercase font-medium transition-all duration-300 group-hover:text-[#042f22] group-hover:translate-y-1 transform-gpu"
           style={{ textShadow: "0px 1px 2px rgba(255,255,255,0.5)" }}
         >
           View Project
@@ -422,9 +515,9 @@ function ProjectOverlay({ cat, onClose }) {
 
 
       {/* ── MASTER PADDING WRAPPER ── */}
-      <div
-        className="w-full min-h-screen pr-8"
-        style={{ paddingLeft: "max(2rem, 2vw)", paddingTop: "max(1rem, 1vh)" }}
+        <div
+          className="w-full min-h-screen"
+          style={{ paddingLeft: "clamp(1rem, 3vw, 2rem)", paddingRight: "clamp(1rem, 3vw, 2rem)", paddingTop: "max(1rem, 1vh)" }}
       >
 
         {/* ── Hero Header ── left-aligned with proper margins ── */}
@@ -479,7 +572,7 @@ function ProjectOverlay({ cat, onClose }) {
 
             <motion.h1
               layoutId={`card-title-${cat.id}`}
-              className="text-[#042f22] text-[28px] md:text-[42px] lg:text-[48px] tracking-tight leading-[1.05] font-bold text-left drop-shadow-sm"
+              className="text-[#042f22] text-[22px] sm:text-[28px] md:text-[42px] lg:text-[48px] tracking-tight leading-[1.05] font-bold text-left drop-shadow-sm"
               style={{ fontFamily: "'Playfair Display', serif", marginBottom: "0.75rem" }}
             >
               A Unified Platform For Cinematic Stories
@@ -508,12 +601,12 @@ function ProjectOverlay({ cat, onClose }) {
 
         {/* ── Parallax Bento Grid ── */}
         {scrollContainer && (
-          <div className="relative w-full max-w-[1800px] pb-[300px]">
-            <div className="grid grid-cols-4 gap-2 md:gap-4 lg:gap-5 xl:gap-8 items-start">
+          <div className="relative w-full max-w-[1800px] pb-[150px] sm:pb-[300px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-2 md:gap-4 lg:gap-5 xl:gap-8 items-start">
               {columns.map((col, ci) => (
                 <div
                   key={ci}
-                  className={`flex flex-col gap-2 md:gap-4 lg:gap-5 xl:gap-8 ${ci === 0 ? "col-span-2" : "col-span-1"}`}
+                  className={`flex flex-col gap-3 sm:gap-2 md:gap-4 lg:gap-5 xl:gap-8 ${ci === 0 ? "sm:col-span-2 md:col-span-2" : "col-span-1"}`}
                   style={{ paddingTop: col.offsetTop }}
                 >
                   {/* Apply parallax to the column wrapper instead of individual items for group movement */}
@@ -626,7 +719,7 @@ function CenterHoverModal({ video, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[160] flex items-center justify-center p-8 pointer-events-auto"
+      className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-6 md:p-8 pointer-events-auto"
       initial={{ backgroundColor: "rgba(255,255,255,0)" }}
       animate={{ backgroundColor: "rgba(255,255,255,0.75)" }}
       exit={{ backgroundColor: "rgba(255,255,255,0)", transition: { duration: 0.15 } }}
@@ -636,25 +729,27 @@ function CenterHoverModal({ video, onClose }) {
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className={`relative bg-white rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.2),_0_0_0_1px_rgba(0,0,0,0.03)] flex ${isExpandDown ? 'flex-col' : 'flex-row'} p-4 gap-12`}
+        className={`relative bg-white rounded-[20px] sm:rounded-[32px] md:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] sm:shadow-[0_40px_100px_rgba(0,0,0,0.2),_0_0_0_1px_rgba(0,0,0,0.03)] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-3 sm:p-4 gap-4 sm:gap-8 md:gap-12`}
         style={{
           width: "1150px",
-          maxWidth: "90vw",
-          height: isExpandDown ? "auto" : "500px",
-          minHeight: isExpandDown ? "700px" : "500px"
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+          height: isExpandDown ? "auto" : undefined,
+          minHeight: isExpandDown ? "auto" : undefined,
+          overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="absolute top-8 right-8 z-[170] w-12 h-12 rounded-full bg-black/5 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-all shadow-sm group"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/5 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white active:bg-black active:text-white transition-all shadow-sm group"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
         {/* Video/Media Section */}
-        <div className={`${isExpandDown ? 'w-full h-[400px]' : 'w-[50%] h-full'} relative bg-black shrink-0 overflow-hidden rounded-[32px] shadow-lg group`}>
+        <div className={`${isExpandDown ? 'w-full h-[200px] sm:h-[300px] md:h-[400px]' : 'w-full md:w-[50%] h-[200px] sm:h-[280px] md:h-full'} relative bg-black shrink-0 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`}>
           {isImageOrSlideshow ? (
             <AnimatePresence>
               <motion.img
@@ -682,9 +777,9 @@ function CenterHoverModal({ video, onClose }) {
         </div>
 
         {/* Details Section */}
-        <div className={`${isExpandDown ? 'w-full' : 'w-[50%]'} flex flex-col justify-center bg-white`} style={{
+        <div className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} flex flex-col justify-center bg-white`} style={{
           fontFamily: "'Inter', sans-serif",
-          padding: isExpandDown ? '32px 32px' : '32px 80px'
+          padding: isExpandDown ? 'clamp(16px, 3vw, 32px)' : 'clamp(16px, 3vw, 32px) clamp(16px, 5vw, 80px)'
         }}>
           <div className="flex items-center gap-3 mb-8">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#20C997]/10 border border-[#20C997]/20">
@@ -694,10 +789,10 @@ function CenterHoverModal({ video, onClose }) {
               </span>
             </div>
           </div>
-          <h4 className="text-[#042f22] text-[36px] font-bold mb-6 leading-[1.1] tracking-tight">
+          <h4 className="text-[#042f22] text-[20px] sm:text-[28px] md:text-[36px] font-bold mb-4 sm:mb-6 leading-[1.1] tracking-tight">
             {video.title}
           </h4>
-          <p className="text-[#6b7280] text-[16px] leading-[1.8]">
+          <p className="text-[#6b7280] text-[14px] sm:text-[16px] leading-[1.7] sm:leading-[1.8]">
             {video.description}
           </p>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useTexture } from "@react-three/drei";
 import { useInView } from "react-intersection-observer";
@@ -18,7 +18,10 @@ const TEXTURE_PATHS = [
 ];
 
 // Generate cards — multi-ring scattered layout matching Cosmos hero style
-const FOOTER_CARD_DATA = Array.from({ length: 32 }).map((_, i) => {
+// Accept a mobile flag to reduce card count
+const getFooterCardData = (isMobile) => {
+  const total = isMobile ? 16 : 32;
+  return Array.from({ length: total }).map((_, i) => {
   let radius, scale, angleOffset, speed, zOffset;
 
   if (i < 6) {
@@ -50,7 +53,8 @@ const FOOTER_CARD_DATA = Array.from({ length: 32 }).map((_, i) => {
   const texture = TEXTURE_PATHS[i % TEXTURE_PATHS.length];
 
   return { id: i + 1, texture, radius, angleOffset, speed, scale, zOffset };
-});
+  });
+};
 
 // ---------- Helpers ----------
 function lerp(a, b, t) {
@@ -65,8 +69,9 @@ const tempScale = new THREE.Vector3();
 const tempEuler = new THREE.Euler();
 
 // ---------- Instanced Footer Cards (replaces 32 individual meshes) ----------
-function FooterInstancedCards({ mouseRef }) {
+function FooterInstancedCards({ mouseRef, isMobile }) {
   const texturesArr = useTexture(TEXTURE_PATHS);
+  const cardData = useMemo(() => getFooterCardData(isMobile), [isMobile]);
 
   // Parse card data into groups by texture for instanced rendering
   const groups = useMemo(() => {
@@ -75,7 +80,7 @@ function FooterInstancedCards({ mouseRef }) {
       cards: [],
     }));
 
-    FOOTER_CARD_DATA.forEach((card) => {
+    cardData.forEach((card) => {
       const idx = TEXTURE_PATHS.indexOf(card.texture);
       if (idx !== -1) {
         // Cards closer to center are more translucent so CTA text is readable
@@ -112,7 +117,8 @@ function FooterInstancedCards({ mouseRef }) {
     shape.lineTo(-w / 2, -h / 2 + r);
     shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
 
-    const geo = new THREE.ShapeGeometry(shape, 32);
+    const segments = isMobile ? 16 : 32;
+    const geo = new THREE.ShapeGeometry(shape, segments);
     const pos = geo.attributes.position;
     const uvs = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) {
@@ -122,10 +128,19 @@ function FooterInstancedCards({ mouseRef }) {
     geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
     geo.computeVertexNormals();
     return geo;
-  }, []);
+  }, [isMobile]);
 
   // Scroll velocity tracking
-  const scrollRef = useRef({ val: 0, lastY: typeof window !== "undefined" ? window.scrollY : 0 });
+  const scrollRef = useRef({ val: 0, lastY: typeof window !== "undefined" ? window.scrollY : 0, currentY: 0 });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollRef.current.currentY = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Cleanup
   useEffect(() => {
@@ -137,10 +152,7 @@ function FooterInstancedCards({ mouseRef }) {
 
   // Single useFrame for ALL 32 cards (was 32 separate useFrame loops)
   useFrame((state, delta) => {
-    let currentScrollY = 0;
-    if (typeof window !== "undefined") {
-      currentScrollY = window.scrollY;
-    }
+    const currentScrollY = scrollRef.current.currentY || 0;
     const scrollDelta = Math.abs(currentScrollY - scrollRef.current.lastY);
     scrollRef.current.lastY = currentScrollY;
     scrollRef.current.val = lerp(scrollRef.current.val || 0, scrollDelta, 0.1);
@@ -222,10 +234,25 @@ function FooterInstancedCards({ mouseRef }) {
 }
 
 // ---------- Subtle Camera Rig ----------
-function CameraRig({ mouseRef }) {
-  useFrame(({ camera }) => {
-    const mx = mouseRef.current.x * 0.5;
-    const my = mouseRef.current.y * 0.5;
+function CameraRig({ mouseRef, isMobile }) {
+  const { camera, size } = useThree();
+
+  // Responsive camera position
+  useEffect(() => {
+    if (size.width < 768) {
+      camera.position.z = 24;
+      camera.fov = 55;
+    } else {
+      camera.position.z = 18;
+      camera.fov = 50;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size.width]);
+
+  useFrame(() => {
+    const sensitivity = isMobile ? 0.2 : 0.5;
+    const mx = mouseRef.current.x * sensitivity;
+    const my = mouseRef.current.y * sensitivity;
     camera.position.x = lerp(camera.position.x, mx, 0.02);
     camera.position.y = lerp(camera.position.y, my, 0.02);
     camera.lookAt(0, 0, 0);
@@ -244,6 +271,15 @@ const FooterSection = () => {
     rootMargin: "200px 0px",
   });
 
+  // Device detection (SSR-safe)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const handleMouseMove = useCallback((e) => {
     if (!inView) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -258,21 +294,20 @@ const FooterSection = () => {
       {/* ======== TOP: Full viewport 3D orbiting cards with CTA ======== */}
       <div
         ref={inViewRef}
-        className="relative w-full h-screen min-h-[600px]"
+        className="relative w-full h-[70vh] sm:h-screen min-h-[500px] sm:min-h-[600px]"
         onMouseMove={handleMouseMove}
       >
         {/* 3D Canvas — fills the entire viewport area */}
         <div className="absolute inset-0 z-0">
-          {inView && (
-            <Canvas
-              camera={{
-                position: [0, 0, 18],
-                fov: 50,
-                near: 0.1,
-                far: 100,
-              }}
-              dpr={[1, 1.5]}
-              frameloop="always"
+          <Canvas
+            camera={{
+              position: [0, 0, 18],
+              fov: 50,
+              near: 0.1,
+              far: 100,
+            }}
+            dpr={[1, isMobile ? 1 : 1.5]}
+            frameloop={inView ? "always" : "demand"}
               gl={{
                 antialias: false,
                 alpha: false,
@@ -283,23 +318,22 @@ const FooterSection = () => {
             >
               <color attach="background" args={["#fbfcfb"]} />
               <Suspense fallback={null}>
-                <FooterInstancedCards mouseRef={mouseRef} />
-                <CameraRig mouseRef={mouseRef} />
+                <FooterInstancedCards mouseRef={mouseRef} isMobile={isMobile} />
+                <CameraRig mouseRef={mouseRef} isMobile={isMobile} />
               </Suspense>
-            </Canvas>
-          )}
+          </Canvas>
         </div>
 
         {/* Center CTA — text + Calendly button over 3D orbit */}
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-2 text-center">
           <h2 
-            className="pointer-events-auto text-[32px] md:text-[46px] lg:text-[56px] font-bold tracking-tight text-[#042f22] mb-3"
+            className="pointer-events-auto text-[24px] sm:text-[32px] md:text-[46px] lg:text-[56px] font-bold tracking-tight text-[#042f22] mb-2 sm:mb-3 px-4"
             style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 4px 20px rgba(255,255,255,0.8)" }}
           >
             Let's Work Together 🎥
           </h2>
           <p 
-            className="pointer-events-auto text-[#4b5563] text-[16px] md:text-[20px] font-medium max-w-xl mx-auto mb-8"
+            className="pointer-events-auto text-[#4b5563] text-[14px] sm:text-[16px] md:text-[20px] font-medium max-w-xl mx-auto mb-6 sm:mb-8 px-4"
             style={{ fontFamily: "'Inter', sans-serif", textShadow: "0 2px 10px rgba(255,255,255,0.8)" }}
           >
             Book a free consultation call to discuss your video project
@@ -316,7 +350,7 @@ const FooterSection = () => {
         {/* Footer links bar - single row with proper padding like Cosmos */}
         <div 
           className="w-full flex flex-col md:flex-row items-center justify-between py-8 border-t border-[#042f22]/10"
-          style={{ paddingLeft: '7vw', paddingRight: '7vw' }}
+          style={{ paddingLeft: 'clamp(16px, 7vw, 7vw)', paddingRight: 'clamp(16px, 7vw, 7vw)' }}
         >
           {/* Left: Social links */}
           <div className="flex items-center gap-7 md:gap-10">
@@ -358,7 +392,7 @@ const FooterSection = () => {
         </div>
 
         {/* Brand text spanning full width — like Cosmos */}
-        <div className="w-full overflow-hidden pb-10 md:pb-14" style={{ paddingLeft: '4vw', paddingRight: '4vw' }}>
+        <div className="w-full overflow-hidden pb-6 sm:pb-10 md:pb-14" style={{ paddingLeft: '4vw', paddingRight: '4vw' }}>
           <h1 
             className="text-[#042f22] text-[16vw] md:text-[14vw] font-black leading-[0.85] tracking-tighter text-center select-none uppercase"
             style={{ fontFamily: "'Playfair Display', serif" }}

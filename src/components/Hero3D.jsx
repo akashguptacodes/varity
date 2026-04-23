@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useRef, useCallback, useMemo, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Suspense, useRef, useCallback, useMemo, useEffect, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useInView } from "react-intersection-observer";
@@ -22,13 +22,33 @@ const quaternion = new THREE.Quaternion();
 const scaleVec = new THREE.Vector3();
 const reusableEuler = new THREE.Euler();
 
-// Scene background directly handled by <color> attachment
+/**
+ * Responsive camera rig – adjusts FOV and position based on viewport width
+ * so the orbiting cards remain visible on mobile without overflow.
+ */
+function CameraRig({ mouseRef, isMobile }) {
+  const { camera, size } = useThree();
 
-function CameraRig({ mouseRef }) {
-  useFrame((state) => {
-    const { camera } = state;
-    const mx = mouseRef.current.x * 0.5;
-    const my = mouseRef.current.y * 0.5;
+  // Dynamically adjust camera based on viewport
+  useEffect(() => {
+    if (size.width < 768) {
+      camera.position.z = 24; // Pull back on mobile
+      camera.fov = 55;
+    } else if (size.width < 1024) {
+      camera.position.z = 20;
+      camera.fov = 52;
+    } else {
+      camera.position.z = 18;
+      camera.fov = 50;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size.width]);
+
+  useFrame(() => {
+    // Reduce parallax sensitivity on mobile (less jarring)
+    const sensitivity = isMobile ? 0.15 : 0.5;
+    const mx = mouseRef.current.x * sensitivity;
+    const my = mouseRef.current.y * sensitivity;
 
     camera.position.x += (mx - camera.position.x) * 0.02;
     camera.position.y += (my - camera.position.y) * 0.02;
@@ -37,8 +57,10 @@ function CameraRig({ mouseRef }) {
   return null;
 }
 
-function InstancedCards({ scrollVelocityRef, mouseRef }) {
+function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
   const texturesArr = useTexture(TEXTURE_PATHS);
+
+  const filteredCardData = CARD_DATA;
 
   // Parse card data into exact order for instances
   const groups = useMemo(() => {
@@ -47,7 +69,7 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
       cards: [],
     }));
     
-    CARD_DATA.forEach((card) => {
+    filteredCardData.forEach((card) => {
       const idx = TEXTURE_PATHS.indexOf(card.texture);
       if (idx !== -1) {
         map[idx].cards.push({
@@ -65,7 +87,7 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
 
   const refs = useRef([]);
 
-  // Compute Geometry once
+  // Compute Geometry once – reduce segments on mobile
   const sharedGeometry = useMemo(() => {
     const w = 1.4;
     const h = 0.95;
@@ -81,7 +103,9 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
     shape.lineTo(-w / 2, -h / 2 + r);
     shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
 
-    const geo = new THREE.ShapeGeometry(shape, 32);
+    // Fewer segments on mobile for less geometry
+    const segments = isMobile ? 16 : 32;
+    const geo = new THREE.ShapeGeometry(shape, segments);
     const pos = geo.attributes.position;
     const uvs = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) {
@@ -91,7 +115,7 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
     geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
     geo.computeVertexNormals();
     return geo;
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     return () => {
@@ -100,11 +124,15 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
     };
   }, [sharedGeometry, texturesArr]);
 
+  // Frame counter for mobile throttling (update every other frame)
+  const frameCounter = useRef(0);
+
   useFrame((state, delta) => {
-    let currentScrollY = 0;
-    if (typeof window !== "undefined") {
-      currentScrollY = window.scrollY;
-    }
+    // On mobile, update every 2nd frame for perf
+    frameCounter.current++;
+    if (isMobile && frameCounter.current % 2 !== 0) return;
+
+    const currentScrollY = scrollVelocityRef.current.currentY || 0;
     const lastScrollY = scrollVelocityRef.current.lastY || 0;
     const scrollDelta = Math.abs(currentScrollY - lastScrollY);
     scrollVelocityRef.current.lastY = currentScrollY;
@@ -129,7 +157,7 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
         const worldY = c.currentRadius * Math.sin(angle);
         const worldZ = c.zOffset;
 
-        const parallaxStrength = 0.5 * (1 + c.zOffset * 0.03);
+        const parallaxStrength = isMobile ? 0.2 : 0.5 * (1 + c.zOffset * 0.03);
         const mx = mouseRef.current.x * parallaxStrength;
         const my = mouseRef.current.y * parallaxStrength;
 
@@ -145,7 +173,9 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
         quaternion.setFromEuler(reusableEuler);
 
         const baseScale = c.scale;
-        const targetScale = baseScale * (1 + c.hover * 0.35);
+        // Reduce card scale on mobile
+        const mobileScaleFactor = isMobile ? 0.75 : 1;
+        const targetScale = baseScale * mobileScaleFactor * (1 + c.hover * 0.35);
         scaleVec.set(targetScale, targetScale, targetScale);
 
         tempMatrix.compose(vec3, quaternion, scaleVec);
@@ -162,18 +192,21 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
           key={i}
           ref={(el) => (refs.current[i] = el)}
           args={[sharedGeometry, null, group.cards.length]}
-          onPointerOver={(e) => {
-            if (e.instanceId !== undefined) {
-              group.cards[e.instanceId].hoverTarget = 1;
-              document.body.style.cursor = "pointer";
-            }
-          }}
-          onPointerOut={(e) => {
-            if (e.instanceId !== undefined) {
-              group.cards[e.instanceId].hoverTarget = 0;
-              document.body.style.cursor = "auto";
-            }
-          }}
+          // Disable pointer events on mobile (no hover on touch)
+          {...(!isMobile && {
+            onPointerOver: (e) => {
+              if (e.instanceId !== undefined) {
+                group.cards[e.instanceId].hoverTarget = 1;
+                document.body.style.cursor = "pointer";
+              }
+            },
+            onPointerOut: (e) => {
+              if (e.instanceId !== undefined) {
+                group.cards[e.instanceId].hoverTarget = 0;
+                document.body.style.cursor = "auto";
+              }
+            },
+          })}
         >
           <meshBasicMaterial
             map={group.texture}
@@ -188,12 +221,31 @@ function InstancedCards({ scrollVelocityRef, mouseRef }) {
 
 export default function Hero3D() {
   const mouseRef = useRef({ x: 0, y: 0 });
-  const scrollVelocityRef = useRef({ val: 0, lastY: 0 });
+  const scrollVelocityRef = useRef({ val: 0, lastY: 0, currentY: 0 });
   
+  // Track scroll passively to avoid layout thrashing in useFrame
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollVelocityRef.current.currentY = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const { ref: containerRef, inView } = useInView({
     triggerOnce: false,
     rootMargin: "0px",
   });
+
+  // Device detection for canvas config (SSR-safe)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const handleMouseMove = useCallback(throttle((e) => {
     if (!inView) return;
@@ -202,23 +254,35 @@ export default function Hero3D() {
     mouseRef.current = { x, y };
   }, 16), [inView]);
 
+  // Handle touch for mobile parallax (lighter effect)
+  const handleTouchMove = useCallback(throttle((e) => {
+    if (!inView || !e.touches[0]) return;
+    const x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    const y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+    mouseRef.current = { x: x * 0.3, y: y * 0.3 }; // Reduced intensity for touch
+  }, 32), [inView]);
+
   return (
     <div
       ref={containerRef}
       className="absolute inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 0 }}
     >
-      <div className="absolute inset-0 pointer-events-auto" onMouseMove={handleMouseMove}>
-        {inView && (
-          <Canvas
-            camera={{
-              position: [0, 0, 18],
-              fov: 50,
-              near: 0.1,
-              far: 100,
-            }}
-            dpr={[1, typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1]}
-            frameloop="always"
+      <div
+        className="absolute inset-0 pointer-events-auto"
+        onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
+      >
+        <Canvas
+          camera={{
+            position: [0, 0, isMobile ? 24 : 18],
+            fov: isMobile ? 55 : 50,
+            near: 0.1,
+            far: 100,
+          }}
+          /* Lower DPR on mobile: cap at 1 for perf, 1.5 on desktop */
+          dpr={[1, isMobile ? 1 : Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1.5, 1.5)]}
+          frameloop={inView ? "always" : "demand"}
             gl={{
               antialias: false,
               alpha: false,
@@ -229,11 +293,10 @@ export default function Hero3D() {
           >
             <color attach="background" args={["#fbfcfb"]} />
             <Suspense fallback={null}>
-              <CameraRig mouseRef={mouseRef} />
-              <InstancedCards scrollVelocityRef={scrollVelocityRef} mouseRef={mouseRef} />
+              <CameraRig mouseRef={mouseRef} isMobile={isMobile} />
+              <InstancedCards scrollVelocityRef={scrollVelocityRef} mouseRef={mouseRef} isMobile={isMobile} />
             </Suspense>
-          </Canvas>
-        )}
+        </Canvas>
       </div>
     </div>
   );

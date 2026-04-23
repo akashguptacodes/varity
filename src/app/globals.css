@@ -34,6 +34,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Prevent iOS bounce / overscroll */
+  overscroll-behavior: none;
 }
 
 body {
@@ -42,9 +44,22 @@ body {
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
+  /* Responsive base font using clamp */
+  font-size: clamp(14px, 1vw + 10px, 16px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent text size adjust on orientation change (iOS) */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-/* Scrollbar */
+/* Ensure tap targets are accessible (min 44×44) */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -58,75 +73,36 @@ body {
   border-radius: 3px;
 }
 
-/* Animations */
+/* ── Animations ── */
 @keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes pulse-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px var(--glow-green), 0 0 40px rgba(13, 124, 102, 0.08);
-  }
-
-  50% {
-    box-shadow: 0 0 30px var(--glow-green), 0 0 60px rgba(13, 124, 102, 0.15);
-  }
+  0%, 100% { box-shadow: 0 0 20px var(--glow-green), 0 0 40px rgba(13, 124, 102, 0.08); }
+  50% { box-shadow: 0 0 30px var(--glow-green), 0 0 60px rgba(13, 124, 102, 0.15); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Utility classes */
@@ -185,14 +161,15 @@ body {
   text-shadow: 0 0 20px rgba(13, 124, 102, 0.3), 0 0 40px rgba(13, 124, 102, 0.1);
 }
 
+/* ── Buttons – responsive padding via clamp ── */
 .btn-primary {
   background: linear-gradient(135deg, #0d7c66, #0f9b81);
   color: white;
   border: none;
-  padding: 14px 36px;
+  padding: clamp(12px, 1.5vw, 14px) clamp(24px, 3vw, 36px);
   border-radius: 14px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: clamp(14px, 1vw + 10px, 16px);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -217,14 +194,26 @@ body {
   opacity: 1;
 }
 
+/* On touch devices, remove hover-dependent transforms to prevent sticky states */
+@media (hover: none) {
+  .btn-primary:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 4px 15px rgba(13, 124, 102, 0.2);
+  }
+}
+
 .btn-secondary {
   background: transparent;
   color: #0d7c66;
   border: 1.5px solid rgba(13, 124, 102, 0.25);
-  padding: 14px 36px;
+  padding: clamp(12px, 1.5vw, 14px) clamp(24px, 3vw, 36px);
   border-radius: 14px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: clamp(14px, 1vw + 10px, 16px);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -234,6 +223,16 @@ body {
   background: rgba(13, 124, 102, 0.06);
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(13, 124, 102, 0.1);
+}
+
+@media (hover: none) {
+  .btn-secondary:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-secondary:active {
+    transform: scale(0.97);
+  }
 }
 
 /* Canvas container */
@@ -259,7 +258,7 @@ body {
   background: #ffffff;
   border: 1px solid rgba(13, 124, 102, 0.08);
   border-radius: 20px;
-  padding: 32px;
+  padding: clamp(20px, 3vw, 32px);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -271,6 +270,13 @@ body {
   box-shadow: 0 20px 60px rgba(13, 124, 102, 0.08);
 }
 
+@media (hover: none) {
+  .feature-card:hover {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+}
+
 /* Subtle dot pattern overlay */
 .dot-overlay {
   position: fixed;
@@ -280,6 +286,13 @@ body {
   opacity: 0.03;
   background-image: radial-gradient(circle, #0d7c66 1px, transparent 1px);
   background-size: 30px 30px;
+}
+
+/* Hide dot overlay on mobile for performance */
+@media (max-width: 767px) {
+  .dot-overlay {
+    display: none;
+  }
 }
 
 /* Bypass Tailwind JIT for responsive Calendly Button Padding */
@@ -326,5 +339,26 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ── Mobile-specific optimizations ── */
+@media (max-width: 767px) {
+  /* Disable heavy blur effects on mobile for GPU perf */
+  .glass,
+  .glass-strong {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* Simplify float animation on mobile (less extreme) */
+  .animate-float {
+    animation-duration: 8s;
+  }
+
+  /* Remove pulse glow on mobile (GPU-intensive) */
+  .animate-pulse-glow {
+    animation: none;
+    box-shadow: 0 0 15px var(--glow-green);
   }
 }
