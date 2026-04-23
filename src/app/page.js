@@ -46,9 +46,12 @@ export default function Home() {
       </section>
 
       {/* Category Section with moving fluid blob */}
-      <LazySection minHeight="250vh" persist={true}>
+      <LazySection minHeight="150vh" persist={true}>
         <CategorySection />
       </LazySection>
+
+      {/* Spacer between Category and Testimonials */}
+      <div className="w-full h-10 md:h-20 bg-transparent" />
 
       {/* Testimonials Section */}
       <LazySection minHeight="100vh">

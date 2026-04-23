@@ -15,7 +15,7 @@ const CATEGORIES = [
 export default function CategorySection() {
   const containerRef = useRef(null);
 
-  // Track scroll inside the 250vh container
+  // Track scroll inside the 150vh container for smooth sticky animation
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
@@ -34,12 +34,12 @@ export default function CategorySection() {
     return () => { document.body.style.overflow = "auto"; }
   }, [selectedCategory]);
 
-  const scrollAngle = useTransform(scrollYProgress, [0, 0.25, 1], [0, 0, 360]);
-  const introY = useTransform(scrollYProgress, [0, 0.1, 0.25], [120, 120, 0]);
-  const introOpacity = useTransform(scrollYProgress, [0, 0.1, 0.25], [0, 0, 1]);
-  const textY1 = useTransform(scrollYProgress, [0, 0.06, 0.15], [0, 0, -1200]);
-  const textY2 = useTransform(scrollYProgress, [0, 0.09, 0.18], [0, 0, -1200]);
-  const textY3 = useTransform(scrollYProgress, [0, 0.12, 0.21], [0, 0, -1200]);
+  const scrollAngle = useMotionValue(0);
+  const introY = useTransform(scrollYProgress, [0, 0.8], [120, 0]);
+  const introOpacity = useTransform(scrollYProgress, [0, 0.8], [0, 1]);
+  const textY1 = useTransform(scrollYProgress, [0.2, 0.6], [0, -1200]);
+  const textY2 = useTransform(scrollYProgress, [0.25, 0.65], [0, -1200]);
+  const textY3 = useTransform(scrollYProgress, [0.3, 0.7], [0, -1200]);
   const dragAngle = useMotionValue(0);
   const dragTiltX = useMotionValue(0);
   const dragTiltZ = useMotionValue(0);
@@ -50,6 +50,49 @@ export default function CategorySection() {
     const baseSpeed = 0.008;
     autoAngle.set(autoAngle.get() + baseSpeed * delta * 0.5);
   });
+
+  const wheelTimeout = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      // If the scroll is predominantly horizontal, we use it to rotate the orbit
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        // Inverted direction (left swipe moves cards left)
+        dragAngle.set(dragAngle.get() + e.deltaX * 0.2);
+
+        // Add dynamic tilt effect based on wheel swipe speed
+        const tiltZ = Math.max(-12, Math.min(12, e.deltaX * 0.15));
+        const tiltX = Math.max(-10, Math.min(10, Math.abs(e.deltaX) * 0.05));
+        dragTiltZ.set(tiltZ);
+        dragTiltX.set(tiltX);
+
+        // Spring settle back to flat
+        const springBack = (mv, target) => {
+          const step = () => {
+            const current = mv.get();
+            const next = current + (target - current) * 0.15;
+            mv.set(Math.abs(next - target) < 0.1 ? target : next);
+            if (Math.abs(next - target) > 0.1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        };
+
+        clearTimeout(wheelTimeout.current);
+        wheelTimeout.current = setTimeout(() => {
+          springBack(dragTiltX, 0);
+          springBack(dragTiltZ, 0);
+        }, 150);
+      }
+    };
+
+    // passive: false is required to allow e.preventDefault()
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [dragAngle, dragTiltX, dragTiltZ]);
 
   return (
     <>
@@ -63,7 +106,7 @@ export default function CategorySection() {
         )}
       </AnimatePresence>
 
-      <section ref={containerRef} className="relative w-full h-[250vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
+      <section ref={containerRef} className="relative w-full h-[150vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
         {/* Keyframes and fonts are in globals.css */}
         <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-24 z-0">
 
@@ -82,7 +125,7 @@ export default function CategorySection() {
           </div>
 
           <div className="relative flex items-center justify-center min-h-[600px] w-full max-w-6xl z-10" style={{ perspective: "1600px" }}>
-            <div className="absolute w-[800px] h-[800px] bg-[#20C997] opacity-[0.10] blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute w-[800px] h-[800px] bg-[#20C997] opacity-[0.10] blur-[150px] rounded-full pointer-events-none transform-gpu" />
 
             <motion.div className="absolute inset-0 flex items-center justify-center">
               <motion.div
@@ -117,6 +160,18 @@ export default function CategorySection() {
               })}
             </motion.div>
           </div>
+
+          {/* SWIPE INDICATOR */}
+          <motion.div
+            className="absolute bottom-1 inset-x-0 flex flex-col items-center justify-center z-[60] pointer-events-none"
+            style={{ opacity: introOpacity }}
+          >
+            <div className="flex items-center gap-3 text-white bg-gradient-to-r from-[#0d7c66] to-[#20C997] px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_30px_rgba(32,201,151,0.4)] animate-bounce">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              <span className="text-[12px] md:text-[14px] uppercase tracking-[0.2em] font-bold drop-shadow-md" style={{ fontFamily: "'Inter', sans-serif" }}>Swipe to Rotate</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </motion.div>
         </div>
       </section>
     </>
@@ -128,8 +183,6 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
   const combinedAngle = useTransform(() => {
     return (index * (360 / numItems)) + autoAngle.get() + scrollAngle.get() + dragAngle.get();
   });
-
-  const isDragging = useRef(false);
 
   const x = useTransform(() => {
     const rad = (combinedAngle.get() * Math.PI) / 180;
@@ -200,37 +253,7 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
           rotateZ: dragTiltZ,
           transformOrigin: "center center",
         }}
-        onPan={(e, info) => {
-          dragAngle.set(dragAngle.get() - info.delta.x * 0.2);
-          // Paper-like reactive tilt based on drag velocity
-          const tiltX = Math.max(-15, Math.min(15, info.velocity.y * 0.02));
-          const tiltZ = Math.max(-12, Math.min(12, -info.velocity.x * 0.015));
-          dragTiltX.set(tiltX);
-          dragTiltZ.set(tiltZ);
-        }}
-        onPanStart={() => {
-          isDragging.current = true;
-        }}
-        onPanEnd={() => {
-          setTimeout(() => { isDragging.current = false; }, 50);
-          // Spring settle back to flat
-          const springBack = (mv, target) => {
-            const step = () => {
-              const current = mv.get();
-              const next = current + (target - current) * 0.15;
-              mv.set(Math.abs(next - target) < 0.1 ? target : next);
-              if (Math.abs(next - target) > 0.1) requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-          };
-          springBack(dragTiltX, 0);
-          springBack(dragTiltZ, 0);
-        }}
-        onClick={(e) => {
-          if (!isDragging.current) {
-            onClick();
-          }
-        }}
+        onClick={onClick}
         whileTap={{ scale: 0.97, rotateX: 3, transition: { type: "spring", stiffness: 400, damping: 15 } }}
       >
 
