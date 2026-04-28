@@ -79,8 +79,8 @@ export default function AboutPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-auto"
-        style={{ padding: "24px clamp(28px, 6vw, 80px)" }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-auto glass-nav"
+        style={{ padding: "20px clamp(28px, 6vw, 80px)" }}
       >
         <a href="/" className="flex items-center gap-3 group">
           <div className="w-[44px] h-[44px] bg-[#0d7c66] rounded-full flex items-center justify-center cursor-pointer group-hover:scale-110 transition-transform shadow-md">
@@ -94,16 +94,24 @@ export default function AboutPage() {
         </a>
         <a
           href="/"
-          className="text-[13px] font-semibold tracking-[0.15em] uppercase text-[#042f22]/60 hover:text-[#042f22] transition-colors"
-          style={{ fontFamily: "'Inter', sans-serif" }}
+          className="group flex items-center gap-2 text-[12px] md:text-[13px] font-bold tracking-[0.15em] uppercase text-[#042f22] hover:text-[#065f46] transition-all duration-400 rounded-full px-5 py-2.5 shadow-[0_4px_16px_rgba(13,124,102,0.06)] hover:shadow-[0_8px_24px_rgba(13,124,102,0.12)] hover:-translate-y-0.5"
+          style={{ 
+            fontFamily: "'Inter', sans-serif", 
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(239,248,246,0.6))', 
+            backdropFilter: 'blur(16px) saturate(1.5)', 
+            WebkitBackdropFilter: 'blur(16px) saturate(1.5)', 
+            border: '1px solid rgba(32,201,151,0.2)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)'
+          }}
         >
-          ← Back to Home
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-1 transition-transform duration-300"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+          Back to Home
         </a>
       </motion.nav>
 
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative w-full min-h-[92vh] flex flex-col justify-center items-center overflow-hidden">
+      <section className="relative w-full min-h-[92vh] flex flex-col justify-center items-center overflow-hidden shadow-[0_20px_60px_rgba(13,124,102,0.08)] rounded-b-[40px] sm:rounded-b-[60px] z-10">
         {/* Background decorative elements */}
         <div className="absolute top-[-10%] right-[-10%] w-[700px] h-[700px] bg-[#20C997]/[0.03] rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-[#042f22]/[0.02] rounded-full blur-[120px] pointer-events-none" />
@@ -118,11 +126,11 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-3 rounded-full bg-white border border-[#20C997]/15 shadow-[0_2px_16px_rgba(32,201,151,0.08)]"
-            style={{ padding: "10px 22px", marginBottom: "48px" }}
+            className="inline-flex items-center gap-3 rounded-full hover:scale-105 transition-transform duration-500 cursor-default"
+            style={{ padding: "10px 24px", marginBottom: "48px", background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3))', backdropFilter: 'blur(20px) saturate(1.5)', WebkitBackdropFilter: 'blur(20px) saturate(1.5)', border: '1px solid rgba(32,201,151,0.3)', boxShadow: '0 8px 32px rgba(13,124,102,0.1), inset 0 2px 0 rgba(255,255,255,0.6)' }}
           >
-            <span className="w-2 h-2 rounded-full bg-[#20C997] animate-pulse" />
-            <span className="text-[#0d9488] font-semibold tracking-[0.15em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <span className="w-2 h-2 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: '0 0 10px rgba(32,201,151,0.8)' }} />
+            <span className="text-[#0d7c66] font-bold tracking-[0.15em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
               Elevating Visual Storytelling
             </span>
           </motion.div>
@@ -167,11 +175,12 @@ export default function AboutPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 1 }}
           >
-            <div className="w-6 h-10 rounded-full border-2 border-[#042f22]/15 flex justify-center pt-2">
+            <div className="w-8 h-14 rounded-full flex justify-center pt-2.5" style={{ border: '1px solid rgba(32,201,151,0.3)', background: 'linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2))', backdropFilter: 'blur(16px) saturate(1.5)', WebkitBackdropFilter: 'blur(16px) saturate(1.5)', boxShadow: '0 8px 24px rgba(13,124,102,0.08), inset 0 1px 0 rgba(255,255,255,0.5)' }}>
               <motion.div
-                animate={{ y: [0, 12, 0] }}
+                animate={{ y: [0, 14, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="w-1.5 h-1.5 rounded-full bg-[#20C997]"
+                className="w-1.5 h-1.5 rounded-full bg-[#0d7c66]"
+                style={{ boxShadow: '0 0 8px rgba(13,124,102,0.6)' }}
               />
             </div>
           </motion.div>
@@ -180,7 +189,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ OUR STORY ═══════════════ */}
-      <section className="relative bg-white border-t border-[#042f22]/[0.04]">
+      <section className="relative bg-white border-t border-[#042f22]/[0.04] shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] rounded-b-[40px] sm:rounded-b-[60px] shadow-[0_20px_60px_rgba(13,124,102,0.08)] z-20 mt-12 sm:mt-16">
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
           <div className="grid lg:grid-cols-2 items-center" style={{ gap: "clamp(48px, 6vw, 100px)" }}>
 
@@ -219,12 +228,13 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full aspect-[4/3] max-w-[520px] mx-auto lg:mx-0 lg:ml-auto rounded-[2.5rem] bg-gradient-to-br from-[#f1f5f9] to-[#e8ede9] border border-[#e2e8f0]/60 shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex justify-center items-center overflow-hidden"
+              className="relative w-full aspect-[4/3] max-w-[520px] mx-auto lg:mx-0 lg:ml-auto overflow-hidden flex justify-center items-center group"
+              style={{ borderRadius: '2.5rem', background: 'linear-gradient(145deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1))', backdropFilter: 'blur(24px) saturate(1.8)', WebkitBackdropFilter: 'blur(24px) saturate(1.8)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 24px 80px rgba(13,124,102,0.12), inset 0 2px 0 rgba(255,255,255,0.8), inset 0 0 20px rgba(255,255,255,0.5)' }}
             >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(32,201,151,0.1)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(32,201,151,0.15)_0%,transparent_70%)] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
               {/* Subtle grid pattern */}
-              <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #042f22 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-              <div className="text-[100px] md:text-[140px] drop-shadow-lg opacity-80 select-none">🎬</div>
+              <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, #042f22 1.5px, transparent 1.5px)", backgroundSize: "24px 24px" }} />
+              <div className="text-[100px] md:text-[140px] drop-shadow-2xl opacity-90 select-none group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-500">🎬</div>
             </motion.div>
           </div>
         </div>
@@ -232,7 +242,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ STATS ═══════════════ */}
-      <section className="relative bg-[#042f22] overflow-hidden">
+      <section className="relative bg-[#042f22] overflow-hidden shadow-[0_-20px_60px_rgba(13,124,102,0.15)] rounded-[40px] sm:rounded-[60px] z-30 mt-12 sm:mt-16">
         {/* Decorative glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#20C997]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#20C997]/8 rounded-full blur-[100px] pointer-events-none" />
@@ -267,17 +277,17 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ duration: 0.7, delay: idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col items-center justify-center h-full rounded-[2rem] bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm hover:bg-white/[0.1] transition-all duration-500 group"
-                  style={{ padding: "clamp(32px, 5vw, 48px) clamp(24px, 3vw, 40px)" }}
+                  className="flex flex-col items-center justify-center h-full rounded-[2rem] border hover:bg-white/[0.1] transition-all duration-500 group"
+                  style={{ padding: "clamp(32px, 5vw, 48px) clamp(24px, 3vw, 40px)", background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))', backdropFilter: 'blur(20px) saturate(1.5)', WebkitBackdropFilter: 'blur(20px) saturate(1.5)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 12px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)' }}
                 >
                   <div
-                    className="font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-[#20C997] to-[#6ee7b7] group-hover:scale-110 transition-transform duration-500"
+                    className="font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-[#20C997] to-[#6ee7b7] group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(32,201,151,0.3)]"
                     style={{ fontFamily: "'Inter', sans-serif", letterSpacing: "-0.04em", fontSize: "clamp(3rem, 5vw, 4.5rem)", marginBottom: "12px" }}
                   >
                     {stat.value}
                   </div>
                   <div
-                    className="text-white/50 font-semibold tracking-[0.2em] uppercase text-[11px]"
+                    className="text-white/60 font-bold tracking-[0.2em] uppercase text-[11px]"
                     style={{ fontFamily: "'Inter', sans-serif" }}
                   >
                     {stat.label}
@@ -325,7 +335,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 0.7, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  className="bg-white rounded-[1.75rem] border border-[#042f22]/[0.05] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] group transition-all duration-500 overflow-hidden relative h-full flex flex-col justify-between aspect-square"
+                  className="rounded-[1.75rem] glass-card group transition-all duration-500 overflow-hidden relative h-full flex flex-col justify-between aspect-square"
                   style={{ padding: "clamp(24px, 3vw, 32px)" }}
                 >
                   {/* Large watermark icon */}
@@ -334,8 +344,8 @@ export default function AboutPage() {
                   </div>
 
                   <div
-                    className="w-12 h-12 rounded-xl bg-[#f8fafc] border border-[#042f22]/[0.05] flex items-center justify-center text-xl group-hover:-translate-y-1 transition-transform duration-400"
-                    style={{ marginBottom: "auto" }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl group-hover:-translate-y-1 transition-transform duration-400"
+                    style={{ marginBottom: "auto", background: 'linear-gradient(135deg, rgba(32,201,151,0.08), rgba(13,124,102,0.04))', border: '1px solid rgba(32,201,151,0.15)' }}
                   >
                     {cat.icon}
                   </div>
@@ -393,7 +403,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ duration: 0.7, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  className="bg-[#fbfcfb] rounded-[1.75rem] border border-[#042f22]/[0.05] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] h-full transition-all duration-500"
+                  className="rounded-[1.75rem] glass-card h-full transition-all duration-500"
                   style={{ padding: "clamp(28px, 3vw, 40px)" }}
                 >
                   <div className="text-3xl" style={{ marginBottom: "20px" }}>{feature.icon}</div>
@@ -469,7 +479,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="relative bg-white border-t border-[#042f22]/[0.04]">
+      <footer className="relative" style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.6), rgba(220,242,235,0.4))', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(32,201,151,0.1)' }}>
         <div
           className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between"
           style={{ margin: "0 auto", padding: "clamp(24px, 3vw, 40px) clamp(28px, 6vw, 80px)" }}

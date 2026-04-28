@@ -102,7 +102,7 @@ export default function TestimonialsSection() {
 
   return (
     <section
-      className="relative w-full min-h-[80vh] sm:min-h-screen mt-16 sm:mt-24 lg:mt-48 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-center border-t border-[#0d7c66]/15 py-12 sm:py-0"
+      className="relative w-full min-h-[80vh] sm:min-h-screen mt-16 sm:mt-24 lg:mt-48 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-center border-t border-[#0d7c66]/10 py-12 sm:py-0"
     >
       {/* Keyframes and fonts are in globals.css */}
 
@@ -115,42 +115,26 @@ export default function TestimonialsSection() {
       <div className="absolute bottom-[25%] left-[5%] w-[30%] h-[30%] bg-[#0d7c66]/8 blur-[120px] rounded-full pointer-events-none transform-gpu" />
 
       {/* Header */}
-      <motion.div
+      <div
         className="text-center mb-8 sm:mb-12 md:mb-16 z-20 relative flex flex-col items-center px-4"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
       >
-        <motion.h2
+        <h2
           className="text-transparent bg-clip-text bg-gradient-to-r from-[#0d7c66] via-[#20C997] to-[#0d7c66] text-[28px] sm:text-[36px] md:text-[50px] lg:text-[65px] leading-[1.02] tracking-tight mb-4 sm:mb-6 uppercase font-black"
           style={{ fontFamily: "'Playfair Display', serif" }}
-          initial={{ scale: 0.9 }}
-          whileInView={{ scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
         >
           Client Feedback
-        </motion.h2>
-        <motion.p
+        </h2>
+        <p
           className="text-[#0d7c66] text-[13px] sm:text-[15px] md:text-[17px] lg:text-[20px] uppercase tracking-[0.15em] sm:tracking-[0.25em] font-bold max-w-3xl px-4 sm:px-6 leading-relaxed"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
         >
           Industry Leaders Trust Verity
-        </motion.p>
+        </p>
 
         {/* Decorative line */}
-        <motion.div
+        <div
           className="w-24 h-1 bg-gradient-to-r from-[#20C997] to-[#0d7c66] rounded-full mt-8"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          viewport={{ once: true }}
         />
-      </motion.div>
+      </div>
 
       {/* Enhanced carousel container with better spacing */}
       <div className="relative flex items-center justify-center w-full max-w-[980px] mx-auto h-[480px] sm:h-[560px] md:h-[620px] z-10 px-4 sm:px-8">
@@ -158,7 +142,8 @@ export default function TestimonialsSection() {
         {/* Left Arrow */}
         <motion.button
           onClick={() => slide(1)}
-          className="absolute left-2 sm:left-0 lg:-left-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_8px_25px_rgba(4,47,34,0.15)] sm:shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
+          className="absolute left-2 sm:left-0 lg:-left-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-[#042f22] transition-all focus:outline-none group"
+          style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.85), rgba(220,242,235,0.7))', backdropFilter: 'blur(16px) saturate(1.5)', WebkitBackdropFilter: 'blur(16px) saturate(1.5)', border: '2px solid rgba(32,201,151,0.25)', boxShadow: '0 8px 32px rgba(13,124,102,0.1), inset 0 1px 0 rgba(255,255,255,0.5)' }}
           whileHover={{
             scale: 1.1,
             background: "linear-gradient(135deg, #EFF8F6 0%, #20C997 100%)"
@@ -191,7 +176,8 @@ export default function TestimonialsSection() {
         {/* Right Arrow */}
         <motion.button
           onClick={() => slide(-1)}
-          className="absolute right-2 sm:right-0 lg:-right-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-white to-[#EFF8F6] border-2 border-[#20C997]/40 rounded-full flex items-center justify-center text-[#042f22] shadow-[0_8px_25px_rgba(4,47,34,0.15)] sm:shadow-[0_15px_40px_rgba(4,47,34,0.2)] hover:shadow-[0_20px_50px_rgba(4,47,34,0.3)] transition-all focus:outline-none group"
+          className="absolute right-2 sm:right-0 lg:-right-20 z-50 w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-[#042f22] transition-all focus:outline-none group"
+          style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.85), rgba(220,242,235,0.7))', backdropFilter: 'blur(16px) saturate(1.5)', WebkitBackdropFilter: 'blur(16px) saturate(1.5)', border: '2px solid rgba(32,201,151,0.25)', boxShadow: '0 8px 32px rgba(13,124,102,0.1), inset 0 1px 0 rgba(255,255,255,0.5)' }}
           whileHover={{
             scale: 1.1,
             background: "linear-gradient(135deg, #EFF8F6 0%, #20C997 100%)"
@@ -244,54 +230,54 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobil
     >
       <Tilt
         tiltEnable={!isMobile}
-        tiltMaxAngleX={15}
-        tiltMaxAngleY={15}
-        scale={1.05}
+        tiltMaxAngleX={8}
+        tiltMaxAngleY={8}
+        scale={1.02}
         transitionSpeed={400}
         className="w-full h-full"
       >
         <motion.div
           className="w-full h-full relative rounded-[32px]"
           whileHover={{
-            scale: 1.02,
-            y: -5
+            scale: 1.01,
+            y: -3
           }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white to-[#F4FCF8] shadow-[inset_0_0_0_1px_rgba(32,201,151,0.08)]" />
+          <div className="absolute inset-0 rounded-[32px]" style={{ background: 'linear-gradient(145deg, rgba(32,201,151,0.06), rgba(13,124,102,0.03))', boxShadow: 'inset 0 0 0 1px rgba(32,201,151,0.1)' }} />
 
           <div 
-            className="relative z-10 w-full h-full rounded-[24px] sm:rounded-[32px] border border-[#20C997]/15 bg-white shadow-[0_12px_35px_-18px_rgba(4,47,34,0.15)] sm:shadow-[0_18px_50px_-25px_rgba(4,47,34,0.2)] flex flex-col justify-between"
-            style={{ padding: "clamp(20px, 3vw, 32px)" }}
+            className="relative z-10 w-full h-full rounded-[24px] sm:rounded-[32px] flex flex-col justify-between"
+            style={{ padding: "clamp(20px, 3vw, 32px)", background: 'linear-gradient(135deg, #ffffff 0%, #f5fbf9 100%)', boxShadow: '0 12px 40px rgba(13,124,102,0.08), inset 0 1px 1px rgba(255,255,255,0.8)', border: '1px solid rgba(32,201,151,0.12)' }}
           >
-          <div>
-            <div className="flex items-center gap-1 mb-6">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-5 h-5 text-[#20C997]" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-
-            <p className="text-[#042f22] font-semibold text-[15px] sm:text-[18px] md:text-[20px] leading-snug mb-3 sm:mb-4">
-              "{item.headline}"
-            </p>
-            <p className="text-gray-600 text-[13px] sm:text-[14px] md:text-[15px] leading-relaxed mb-4 sm:mb-8 line-clamp-4 sm:line-clamp-none">
-              {item.text}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 border-t border-gray-100 pt-8 mt-10">
-            <img src={item.image} alt={item.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
             <div>
-              <h4 className="text-[#042f22] font-bold text-[16px] leading-tight font-sans">
-                {item.name}
-              </h4>
-              <p className="text-[#20C997] text-[13px] font-medium mt-0.5">
-                {item.role} @ {item.company}
+              <div className="flex items-center gap-1 mb-6">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 text-[#20C997]" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+
+              <p className="text-[#042f22] font-semibold text-[15px] sm:text-[18px] md:text-[20px] leading-snug mb-3 sm:mb-4">
+                "{item.headline}"
+              </p>
+              <p className="text-gray-600 text-[13px] sm:text-[14px] md:text-[15px] leading-relaxed mb-4 sm:mb-8 line-clamp-4 sm:line-clamp-none">
+                {item.text}
               </p>
             </div>
-          </div>
+
+            <div className="flex items-center gap-4 border-t border-gray-100 pt-8 mt-10">
+              <img src={item.image} alt={item.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
+              <div>
+                <h4 className="text-[#042f22] font-bold text-[16px] leading-tight font-sans">
+                  {item.name}
+                </h4>
+                <p className="text-[#20C997] text-[13px] font-medium mt-0.5">
+                  {item.role} @ {item.company}
+                </p>
+              </div>
+            </div>
         </div>
       </motion.div>
       </Tilt>

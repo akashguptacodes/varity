@@ -37,13 +37,16 @@ const CalendlyButton = dynamic(() => import("@/components/CalendlyButton"), {
 export default function Home() {
   return (
     <main className="relative bg-[#fbfcfb]">
-      <section className="relative w-full h-[100dvh] overflow-hidden">
+      <section className="relative w-full h-[100dvh] overflow-hidden shadow-[0_20px_60px_rgba(13,124,102,0.08)] rounded-b-[40px] sm:rounded-b-[60px] z-10">
         {/* 3D Canvas Background (Absolute behind everything) */}
         <Hero3D />
 
         {/* HTML Overlay (Absolute Overlay for UI elements) */}
         <UIOverlay />
       </section>
+      
+      {/* Minimal transition spacer - merged sections */}
+      <div className="w-full h-2 md:h-3 bg-[#fbfcfb]" />
 
       {/* Category Section with moving fluid blob */}
       <LazySection minHeight="150vh" persist={true}>
@@ -51,7 +54,7 @@ export default function Home() {
       </LazySection>
 
       {/* Spacer between Category and Testimonials */}
-      <div className="w-full h-10 md:h-20 bg-transparent" />
+      <div className="w-full h-6 md:h-12 bg-transparent" />
 
       {/* Testimonials Section */}
       <LazySection minHeight="100vh">

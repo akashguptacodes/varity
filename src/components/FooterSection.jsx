@@ -22,37 +22,37 @@ const TEXTURE_PATHS = [
 const getFooterCardData = (isMobile) => {
   const total = isMobile ? 16 : 32;
   return Array.from({ length: total }).map((_, i) => {
-  let radius, scale, angleOffset, speed, zOffset;
+    let radius, scale, angleOffset, speed, zOffset;
 
-  if (i < 6) {
-    radius = 4.5;
-    scale = 1.0;
-    angleOffset = (i / 6) * Math.PI * 2;
-    speed = 0.18;
-    zOffset = 0;
-  } else if (i < 16) {
-    radius = 8.0;
-    scale = 1.25;
-    angleOffset = ((i - 6) / 10) * Math.PI * 2;
-    speed = 0.12;
-    zOffset = -0.5;
-  } else if (i < 26) {
-    radius = 12.5;
-    scale = 1.55;
-    angleOffset = ((i - 16) / 10) * Math.PI * 2;
-    speed = 0.08;
-    zOffset = -1.0;
-  } else {
-    radius = 17.0;
-    scale = 1.85;
-    angleOffset = ((i - 26) / 6) * Math.PI * 2;
-    speed = 0.05;
-    zOffset = -1.5;
-  }
+    if (i < 6) {
+      radius = 4.5;
+      scale = 1.0;
+      angleOffset = (i / 6) * Math.PI * 2;
+      speed = 0.18;
+      zOffset = 0;
+    } else if (i < 16) {
+      radius = 8.0;
+      scale = 1.25;
+      angleOffset = ((i - 6) / 10) * Math.PI * 2;
+      speed = 0.12;
+      zOffset = -0.5;
+    } else if (i < 26) {
+      radius = 12.5;
+      scale = 1.55;
+      angleOffset = ((i - 16) / 10) * Math.PI * 2;
+      speed = 0.08;
+      zOffset = -1.0;
+    } else {
+      radius = 17.0;
+      scale = 1.85;
+      angleOffset = ((i - 26) / 6) * Math.PI * 2;
+      speed = 0.05;
+      zOffset = -1.5;
+    }
 
-  const texture = TEXTURE_PATHS[i % TEXTURE_PATHS.length];
+    const texture = TEXTURE_PATHS[i % TEXTURE_PATHS.length];
 
-  return { id: i + 1, texture, radius, angleOffset, speed, scale, zOffset };
+    return { id: i + 1, texture, radius, angleOffset, speed, scale, zOffset };
   });
 };
 
@@ -164,10 +164,10 @@ function FooterInstancedCards({ mouseRef, isMobile }) {
       if (!instMesh) return;
 
       group.cards.forEach((c, idx) => {
-        c.currentRadius = lerp(c.currentRadius, c.radius, 0.04);
-        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.03);
+        c.currentRadius = lerp(c.currentRadius, c.radius, 0.03);
+        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.02);
 
-        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.05;
+        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.04;
 
         c.angleRef -= dynamicSpeed * delta;
         const angle = c.angleRef;
@@ -176,22 +176,16 @@ function FooterInstancedCards({ mouseRef, isMobile }) {
         const worldY = c.currentRadius * Math.sin(angle);
         const worldZ = c.zOffset;
 
-        const parallaxStrength = 0.5 * (1 + c.zOffset * 0.03);
+        const parallaxStrength = 0.3 * (1 + c.zOffset * 0.02);
         const mx = mouseRef.current.x * parallaxStrength;
         const my = mouseRef.current.y * parallaxStrength;
 
-        c.hover = lerp(c.hover, c.hoverTarget, 0.1);
-
-        const tx = worldX + mx;
-        const ty = worldY + my;
-        const tz = worldZ + c.hover * 4.0;
-
-        tempVec3.set(tx, ty, tz);
+        tempVec3.set(worldX + mx, worldY + my, worldZ);
 
         tempEuler.set(0, 0, angle);
         tempQuat.setFromEuler(tempEuler);
 
-        const targetScale = c.scale * (1 + c.hover * 0.35);
+        const targetScale = c.scale;
         tempScale.set(targetScale, targetScale, targetScale);
 
         tempMatrix.compose(tempVec3, tempQuat, tempScale);
@@ -206,20 +200,9 @@ function FooterInstancedCards({ mouseRef, isMobile }) {
       {groups.map((group, i) => (
         <instancedMesh
           key={i}
-          ref={(el) => (refs.current[i] = el)}
+          ref={(el) => { refs.current[i] = el; }}
           args={[sharedGeometry, null, group.cards.length]}
-          onPointerOver={(e) => {
-            if (e.instanceId !== undefined) {
-              group.cards[e.instanceId].hoverTarget = 1;
-              document.body.style.cursor = "pointer";
-            }
-          }}
-          onPointerOut={(e) => {
-            if (e.instanceId !== undefined) {
-              group.cards[e.instanceId].hoverTarget = 0;
-              document.body.style.cursor = "auto";
-            }
-          }}
+          raycast={() => null}
         >
           <meshBasicMaterial
             map={group.texture}
@@ -289,7 +272,7 @@ const FooterSection = () => {
   }, [inView]);
 
   return (
-    <footer className="relative w-full bg-[#fbfcfb] overflow-hidden">
+    <footer className="relative w-full bg-[#fbfcfb] overflow-hidden mt-16 sm:mt-24 md:mt-32 shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] z-30">
 
       {/* ======== TOP: Full viewport 3D orbiting cards with CTA ======== */}
       <div
@@ -308,56 +291,59 @@ const FooterSection = () => {
             }}
             dpr={[1, isMobile ? 1 : 1.5]}
             frameloop={inView ? "always" : "demand"}
-              gl={{
-                antialias: false,
-                alpha: false,
-                powerPreference: "high-performance",
-                toneMapping: THREE.NoToneMapping,
-              }}
-              style={{ background: "#fbfcfb" }}
-            >
-              <color attach="background" args={["#fbfcfb"]} />
-              <Suspense fallback={null}>
-                <FooterInstancedCards mouseRef={mouseRef} isMobile={isMobile} />
-                <CameraRig mouseRef={mouseRef} isMobile={isMobile} />
-              </Suspense>
+            gl={{
+              antialias: false,
+              alpha: false,
+              powerPreference: "high-performance",
+              toneMapping: THREE.NoToneMapping,
+            }}
+            style={{ background: "#fbfcfb" }}
+          >
+            <color attach="background" args={["#fbfcfb"]} />
+            <Suspense fallback={null}>
+              <FooterInstancedCards mouseRef={mouseRef} isMobile={isMobile} />
+              <CameraRig mouseRef={mouseRef} isMobile={isMobile} />
+            </Suspense>
           </Canvas>
         </div>
 
-        {/* Center CTA — text + Calendly button over 3D orbit */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-2 text-center">
-          <h2 
-            className="pointer-events-auto text-[24px] sm:text-[32px] md:text-[46px] lg:text-[56px] font-bold tracking-tight text-[#042f22] mb-2 sm:mb-3 px-4"
-            style={{ fontFamily: "'Playfair Display', serif", textShadow: "0 4px 20px rgba(255,255,255,0.8)" }}
-          >
-            Let's Work Together 🎥
-          </h2>
-          <p 
-            className="pointer-events-auto text-[#4b5563] text-[14px] sm:text-[16px] md:text-[20px] font-medium max-w-xl mx-auto mb-6 sm:mb-8 px-4"
-            style={{ fontFamily: "'Inter', sans-serif", textShadow: "0 2px 10px rgba(255,255,255,0.8)" }}
-          >
-            Book a free consultation call to discuss your video project
-          </p>
-          
-          <div className="pointer-events-auto shadow-[0_15px_40px_rgba(32,201,151,0.25)] rounded-full hover:scale-105 transition-transform duration-300">
-            <CalendlyButton url="https://calendly.com/akashgupta7484/30min" inline={true} />
+        {/* Center CTA — glassmorphism pill over 3D orbit */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none px-4 sm:px-6 md:px-8 text-center">
+          {/* Glassmorphism backdrop for readability */}
+          <div className="glass-modal rounded-[32px] sm:rounded-[40px] md:rounded-[48px] flex flex-col items-center max-w-3xl w-full" style={{ padding: 'clamp(40px, 5vw, 60px) clamp(40px, 8vw, 100px)' }}>
+            <h2
+              className="pointer-events-auto text-[24px] sm:text-[32px] md:text-[46px] lg:text-[56px] font-bold tracking-tight text-[#042f22] mb-4 sm:mb-6 md:mb-8 w-full"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Let's Work Together 🎥
+            </h2>
+            <p
+              className="pointer-events-auto text-[#4b5563] text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] font-medium w-full mb-10 sm:mb-12 md:mb-14 leading-relaxed"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              Book a free consultation call to discuss your video project
+            </p>
+
+            <div className="pointer-events-auto transition-transform duration-300 flex justify-center mt-2">
+              <CalendlyButton url="https://calendly.com/akashgupta7484/30min" inline={true} />
+            </div>
           </div>
         </div>
       </div>
 
       {/* ======== BOTTOM: Footer bar with links + massive brand text ======== */}
       <div className="relative z-20 w-full bg-[#fbfcfb]">
-        {/* Footer links bar - single row with proper padding like Cosmos */}
-        <div 
-          className="w-full flex flex-col md:flex-row items-center justify-between py-8 border-t border-[#042f22]/10"
-          style={{ paddingLeft: 'clamp(16px, 7vw, 7vw)', paddingRight: 'clamp(16px, 7vw, 7vw)' }}
+        {/* Footer links bar – glassmorphism */}
+        <div
+          className="w-full flex flex-col md:flex-row items-center justify-between py-8"
+          style={{ paddingLeft: 'clamp(16px, 7vw, 7vw)', paddingRight: 'clamp(16px, 7vw, 7vw)', borderTop: '1px solid rgba(32,201,151,0.12)', background: 'linear-gradient(135deg, rgba(239,248,246,0.65) 0%, rgba(220,242,235,0.45) 100%)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
         >
           {/* Left: Social links */}
           <div className="flex items-center gap-7 md:gap-10">
             {["Instagram", "YouTube", "X", "LinkedIn"].map((name) => (
-              <a 
-                key={name} 
-                href="#" 
+              <a
+                key={name}
+                href="#"
                 className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
               >
                 {name}
@@ -368,7 +354,7 @@ const FooterSection = () => {
           {/* Center: Logo */}
           <div className="my-5 md:my-0">
             <div className="w-[44px] h-[44px] bg-[#042f22] rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-md">
-              <span 
+              <span
                 className="text-white text-[22px] italic font-bold pr-0.5"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
@@ -380,9 +366,9 @@ const FooterSection = () => {
           {/* Right: Legal links */}
           <div className="flex items-center gap-7 md:gap-10">
             {["Careers", "Terms", "Privacy"].map((name) => (
-              <a 
-                key={name} 
-                href="#" 
+              <a
+                key={name}
+                href="#"
                 className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
               >
                 {name}
@@ -393,7 +379,7 @@ const FooterSection = () => {
 
         {/* Brand text spanning full width — like Cosmos */}
         <div className="w-full overflow-hidden pb-6 sm:pb-10 md:pb-14" style={{ paddingLeft: '4vw', paddingRight: '4vw' }}>
-          <h1 
+          <h1
             className="text-[#042f22] text-[16vw] md:text-[14vw] font-black leading-[0.85] tracking-tighter text-center select-none uppercase"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >

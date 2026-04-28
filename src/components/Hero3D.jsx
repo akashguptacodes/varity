@@ -45,13 +45,13 @@ function CameraRig({ mouseRef, isMobile }) {
   }, [camera, size.width]);
 
   useFrame(() => {
-    // Reduce parallax sensitivity on mobile (less jarring)
-    const sensitivity = isMobile ? 0.15 : 0.5;
+    // Gentle parallax — reduced sensitivity for smoother feel
+    const sensitivity = isMobile ? 0.1 : 0.3;
     const mx = mouseRef.current.x * sensitivity;
     const my = mouseRef.current.y * sensitivity;
 
-    camera.position.x += (mx - camera.position.x) * 0.02;
-    camera.position.y += (my - camera.position.y) * 0.02;
+    camera.position.x += (mx - camera.position.x) * 0.015;
+    camera.position.y += (my - camera.position.y) * 0.015;
     camera.lookAt(0, 0, 0);
   });
   return null;
@@ -145,10 +145,10 @@ function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
       if (!instMesh) return;
 
       group.cards.forEach((c, idx) => {
-        c.currentRadius = lerp(c.currentRadius, c.radius, 0.04);
-        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.03);
+        c.currentRadius = lerp(c.currentRadius, c.radius, 0.03);
+        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.02);
 
-        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.1;
+        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.08;
 
         c.angleRef -= dynamicSpeed * delta;
         const angle = c.angleRef;
@@ -157,25 +157,18 @@ function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
         const worldY = c.currentRadius * Math.sin(angle);
         const worldZ = c.zOffset;
 
-        const parallaxStrength = isMobile ? 0.2 : 0.5 * (1 + c.zOffset * 0.03);
+        const parallaxStrength = isMobile ? 0.15 : 0.35 * (1 + c.zOffset * 0.02);
         const mx = mouseRef.current.x * parallaxStrength;
         const my = mouseRef.current.y * parallaxStrength;
 
-        c.hover = lerp(c.hover, c.hoverTarget, 0.1);
-
-        const tx = worldX + mx;
-        const ty = worldY + my;
-        const tz = worldZ + c.hover * 4.0;
-
-        vec3.set(tx, ty, tz);
+        vec3.set(worldX + mx, worldY + my, worldZ);
         
         reusableEuler.set(0, 0, angle);
         quaternion.setFromEuler(reusableEuler);
 
         const baseScale = c.scale;
-        // Reduce card scale on mobile
         const mobileScaleFactor = isMobile ? 0.75 : 1;
-        const targetScale = baseScale * mobileScaleFactor * (1 + c.hover * 0.35);
+        const targetScale = baseScale * mobileScaleFactor;
         scaleVec.set(targetScale, targetScale, targetScale);
 
         tempMatrix.compose(vec3, quaternion, scaleVec);
@@ -190,23 +183,9 @@ function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
       {groups.map((group, i) => (
         <instancedMesh
           key={i}
-          ref={(el) => (refs.current[i] = el)}
+          ref={(el) => { refs.current[i] = el; }}
           args={[sharedGeometry, null, group.cards.length]}
-          // Disable pointer events on mobile (no hover on touch)
-          {...(!isMobile && {
-            onPointerOver: (e) => {
-              if (e.instanceId !== undefined) {
-                group.cards[e.instanceId].hoverTarget = 1;
-                document.body.style.cursor = "pointer";
-              }
-            },
-            onPointerOut: (e) => {
-              if (e.instanceId !== undefined) {
-                group.cards[e.instanceId].hoverTarget = 0;
-                document.body.style.cursor = "auto";
-              }
-            },
-          })}
+          raycast={() => null}
         >
           <meshBasicMaterial
             map={group.texture}

@@ -4,23 +4,23 @@ import { generateSpherePositions } from './NeoUtils/sphere';
 
 const ParticleSphere = ({ color, inView, isMobile = false }) => {
   const points = useRef();
-  const { positions, particlesCount } = useMemo(() => generateSpherePositions(isMobile ? 2000 : undefined), [isMobile]);
+  const { positions, particlesCount } = useMemo(() => generateSpherePositions(isMobile ? 1500 : 10000), [isMobile]);
   
   // Store original positions for stable displacement calculations
   const originalPositions = useMemo(() => new Float32Array(positions), [positions]);
   
-  // Frame counter for throttling — update every other frame
+  // Frame counter for throttling
   const frameCounter = useRef(0);
   
   useFrame(({ clock }) => {
-    if (!inView) return; // Pause when not in view
+    if (!inView) return;
     if (!points.current) return;
     
-    // Throttle: update every 3rd frame on mobile, every 2nd on desktop
+    // Throttle: update every 4th frame on mobile, every 3rd on desktop
     frameCounter.current++;
-    const skipFrames = isMobile ? 3 : 2;
+    const skipFrames = isMobile ? 4 : 3;
     if (frameCounter.current % skipFrames !== 0) {
-      // Still do rotation for smoothness
+      // Still do rotation for visual smoothness
       points.current.rotation.x += 0.001;
       points.current.rotation.y += 0.001;
       return;
@@ -34,21 +34,16 @@ const ParticleSphere = ({ color, inView, isMobile = false }) => {
        const y = originalPositions[i3 + 1];
        const z = originalPositions[i3 + 2];
        
-       // Calculate spherical coordinates to map noise properly around the surface
        const r = Math.sqrt(x*x + y*y + z*z);
        if (r === 0) continue;
        const theta = Math.atan2(y, x);
        const phi = Math.acos(z / r);
        
-       // Spherically wrapped ripples prevent Cartesian flat planes (the diamond effect)
-       // Integer multipliers for theta (8.0, 4.0) ensure seamless equatorial wrapping
-       const ripple1 = Math.sin(theta * 8.0 + time * 1.5) * Math.sin(phi * 6.0 - time) * 0.08;
-       const ripple2 = Math.cos(theta * 4.0 - time * 2.0) * Math.cos(phi * 5.0 + time * 1.2) * 0.05;
+       // Single simplified ripple + breathing wobble (was 2 ripples + wobble)
+       const ripple = Math.sin(theta * 6.0 + time * 1.2) * Math.sin(phi * 5.0 - time * 0.8) * 0.08;
+       const wobble = Math.sin(time * 1.5) * 0.02;
        
-       // Pure subtle breathing wobble
-       const wobble = Math.sin(time * 2.0) * 0.02;
-       
-       const displacement = 1.0 + ripple1 + ripple2 + wobble;
+       const displacement = 1.0 + ripple + wobble;
        
        positions[i3] = x * displacement;
        positions[i3 + 1] = y * displacement;

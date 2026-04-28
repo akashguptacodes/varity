@@ -51,9 +51,13 @@ export default function CategorySection() {
   const scrollAngle = useMotionValue(0);
   const introY = useTransform(scrollYProgress, [0, 0.8], [120, 0]);
   const introOpacity = useTransform(scrollYProgress, [0, 0.8], [0, 1]);
-  const textY1 = useTransform(scrollYProgress, [0.2, 0.6], [0, -1200]);
-  const textY2 = useTransform(scrollYProgress, [0.25, 0.65], [0, -1200]);
-  const textY3 = useTransform(scrollYProgress, [0.3, 0.7], [0, -1200]);
+  const rawTextY1 = useTransform(scrollYProgress, [0.2, 0.6], [0, -1200]);
+  const rawTextY2 = useTransform(scrollYProgress, [0.25, 0.65], [0, -1200]);
+  const rawTextY3 = useTransform(scrollYProgress, [0.3, 0.7], [0, -1200]);
+
+  const textY1 = useSpring(rawTextY1, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const textY2 = useSpring(rawTextY2, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const textY3 = useSpring(rawTextY3, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const dragAngle = useMotionValue(0);
   const dragTiltX = useMotionValue(0);
   const dragTiltZ = useMotionValue(0);
@@ -174,7 +178,7 @@ export default function CategorySection() {
         )}
       </AnimatePresence>
 
-      <section ref={setRefs} className="relative w-full h-[150vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb]">
+      <section ref={setRefs} className="relative w-full h-[150vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb] shadow-[0_-20px_60px_rgba(13,124,102,0.1)] rounded-t-[40px] sm:rounded-t-[60px] z-10">
         {/* Keyframes and fonts are in globals.css */}
         <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0">
 
@@ -183,7 +187,7 @@ export default function CategorySection() {
             className="absolute inset-0 flex items-center justify-start pointer-events-none z-0 pl-[4vw]"
           >
             <div
-              className="flex flex-col text-[14vw] sm:text-[12vw] md:text-[9.5vw] leading-[0.95] tracking-tight text-[#064e3b] opacity-40 md:opacity-[0.85] drop-shadow-md select-none -translate-y-[4vh] md:-translate-y-[8vh]"
+              className="flex flex-col text-[14vw] sm:text-[12vw] md:text-[9.5vw] leading-[0.95] tracking-tight text-[#064e3b] opacity-40 md:opacity-[0.85] select-none -translate-y-[4vh] md:-translate-y-[8vh]"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
               <motion.span className="self-start pl-[6vw] transform-gpu block" style={{ y: textY1, willChange: "transform" }}>cinematic</motion.span>
@@ -229,14 +233,14 @@ export default function CategorySection() {
             </motion.div>
           </div>
 
-          {/* SWIPE INDICATOR – positioned above Calendly button on mobile */}
+          {/* SWIPE INDICATOR – glassmorphism pill */}
           <motion.div
             className="absolute bottom-16 sm:bottom-4 inset-x-0 flex flex-col items-center justify-center z-[60] pointer-events-none px-4"
             style={{ opacity: introOpacity }}
           >
-            <div className="flex items-center gap-2 sm:gap-3 text-white bg-gradient-to-r from-[#0d7c66] to-[#20C997] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full border border-white/20 shadow-[0_8px_30px_rgba(32,201,151,0.4)] animate-bounce">
+            <div className="flex items-center gap-2 sm:gap-3 text-[#042f22] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full animate-bounce glass">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-              <span className="text-[11px] sm:text-[12px] md:text-[14px] uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold drop-shadow-md" style={{ fontFamily: "'Inter', sans-serif" }}>Swipe to Rotate</span>
+              <span className="text-[11px] sm:text-[12px] md:text-[14px] uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold drop-shadow-sm" style={{ fontFamily: "'Inter', sans-serif" }}>Swipe to Rotate</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </motion.div>
@@ -361,7 +365,8 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
           {/* Core LayoutId tracking node Ã¢â‚¬â€ card body with full-bleed image */}
           <motion.div
             layoutId={`card-container-${cat.id}`}
-            className="relative w-[160px] h-[160px] sm:w-[220px] sm:h-[220px] md:w-[300px] md:h-[300px] lg:w-[360px] lg:h-[360px] rounded-sm shadow-[0_10px_25px_-6px_rgba(0,0,0,0.35)] sm:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border border-[#0d7c66]/40 transform-gpu overflow-hidden"
+            className="relative w-[160px] h-[160px] sm:w-[220px] sm:h-[220px] md:w-[300px] md:h-[300px] lg:w-[360px] lg:h-[360px] rounded-[12px] sm:rounded-[16px] transform-gpu overflow-hidden"
+            style={{ border: '2px solid rgba(32,201,151,0.35)', boxShadow: '0 12px 30px -6px rgba(13,124,102,0.25), 0 0 0 4px rgba(32,201,151,0.08), inset 0 1px 0 rgba(255,255,255,0.3)' }}
           >
             {/* Full-bleed image Ã¢â‚¬â€ no strips, no black gaps */}
             <motion.img
@@ -380,15 +385,15 @@ function OrbitingCard({ cat, index, numItems, scrollAngle, autoAngle, dragAngle,
         {/* Shared Layout Titles morph outwards beautifully */}
         <motion.p
           layoutId={`card-title-${cat.id}`}
-          className="absolute -top-5 sm:-top-6 left-1 text-[#042f22] text-[12px] sm:text-[16px] md:text-[20px] lg:text-[24px] tracking-[0.1em] font-medium uppercase z-10 transition-transform duration-500 group-hover:-translate-y-2 whitespace-nowrap transform-gpu"
-          style={{ textShadow: "0px 2px 4px rgba(255,255,255,0.8)" }}
+          className="absolute -top-5 sm:-top-7 left-1 text-[#042f22] text-[11px] sm:text-[14px] md:text-[18px] lg:text-[22px] tracking-[0.1em] font-semibold uppercase z-10 transition-transform duration-500 group-hover:-translate-y-2 whitespace-nowrap transform-gpu rounded-full px-3 py-1 sm:px-4 sm:py-1.5"
+          style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.8), rgba(220,242,235,0.6))', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(32,201,151,0.15)', boxShadow: '0 2px 8px rgba(13,124,102,0.06)' }}
         >
           {cat.title}
         </motion.p>
 
         <p
-          className="absolute -bottom-5 sm:-bottom-6 right-2 text-[#064e3b] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[15px] tracking-widest uppercase font-medium transition-all duration-300 group-hover:text-[#042f22] group-hover:translate-y-1 transform-gpu"
-          style={{ textShadow: "0px 1px 2px rgba(255,255,255,0.5)" }}
+          className="absolute -bottom-5 sm:-bottom-7 right-1 text-[#064e3b] text-[9px] sm:text-[11px] md:text-[13px] lg:text-[14px] tracking-widest uppercase font-semibold transition-all duration-300 group-hover:text-[#042f22] group-hover:translate-y-1 transform-gpu rounded-full px-3 py-1 sm:px-4 sm:py-1.5"
+          style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.75), rgba(220,242,235,0.55))', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(32,201,151,0.12)' }}
         >
           View Project
         </p>
@@ -430,13 +435,13 @@ function FloatingCard({ card, enterDelay, onCardClick }) {
 
   return (
     <motion.div
-      className="relative z-10 w-full rounded-[24px] overflow-hidden bg-black cursor-pointer shadow-lg border-[4px] md:border-[6px] lg:border-[8px] border-white transform-gpu"
-      style={{ height: card.height, willChange: "transform, opacity" }}
+      className="relative z-10 w-full rounded-[16px] sm:rounded-[20px] overflow-hidden bg-black cursor-pointer transform-gpu"
+      style={{ height: card.height, willChange: "transform, opacity", border: '2.5px solid rgba(32,201,151,0.3)', boxShadow: '0 8px 32px -6px rgba(13,124,102,0.15), 0 0 0 4px rgba(32,201,151,0.06)' }}
       initial={{ opacity: 0, y: 60 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: enterDelay, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => onCardClick(video)}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.03, boxShadow: '0 20px 60px -10px rgba(13,124,102,0.25), 0 0 0 4px rgba(32,201,151,0.12)' }}
     >
       <motion.div layoutId={`hover-card-${video.id}`} className="w-full h-full relative group">
         <AnimatePresence>
@@ -454,9 +459,10 @@ function FloatingCard({ card, enterDelay, onCardClick }) {
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1113] via-transparent to-transparent opacity-60 z-10 pointer-events-none" />
-        <motion.div className="absolute bottom-6 left-7 right-7 z-20 pointer-events-none">
-          <h4 className="text-white text-[18px] md:text-[21px] font-bold tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#042f22]/60 via-[#042f22]/10 to-transparent opacity-80 group-hover:opacity-50 transition-opacity duration-500 z-10 pointer-events-none" />
+        {/* Glassmorphism title bar */}
+        <motion.div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none" style={{ padding: 'clamp(10px, 1.8vw, 20px) clamp(12px, 2.2vw, 24px)', background: 'linear-gradient(to top, rgba(4,47,34,0.55) 0%, rgba(4,47,34,0.2) 50%, transparent 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+          <h4 className="text-white text-[14px] sm:text-[17px] md:text-[20px] font-bold tracking-tight drop-shadow-md" style={{ fontFamily: "'Inter', sans-serif" }}>
             {video.title}
           </h4>
         </motion.div>
@@ -536,8 +542,8 @@ function ProjectOverlay({ cat, onClose }) {
               style={{ marginBottom: "1rem" }}
             >
               <div
-                className="flex items-center gap-1 rounded-full bg-white/60 backdrop-blur-md border border-gray-200/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] group-hover:bg-white group-hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-400 ease-out"
-                style={{ paddingTop: "12px", paddingBottom: "12px", paddingLeft: "8px", paddingRight: "28px" }}
+                className="flex items-center gap-1 rounded-full transition-all duration-400 ease-out"
+                style={{ paddingTop: "12px", paddingBottom: "12px", paddingLeft: "8px", paddingRight: "28px", background: 'linear-gradient(135deg, rgba(239,248,246,0.85), rgba(220,242,235,0.7))', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(32,201,151,0.18)', boxShadow: '0 4px 16px rgba(13,124,102,0.06), inset 0 1px 0 rgba(255,255,255,0.5)' }}
               >
                 <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center group-hover:bg-[#20C997] transition-all duration-400 ease-out">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-400 group-hover:text-white transition-colors duration-400 group-hover:-translate-x-0.5"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
@@ -720,36 +726,36 @@ function CenterHoverModal({ video, onClose }) {
   return (
     <motion.div
       className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-6 md:p-8 pointer-events-auto"
-      initial={{ backgroundColor: "rgba(255,255,255,0)" }}
-      animate={{ backgroundColor: "rgba(255,255,255,0.75)" }}
-      exit={{ backgroundColor: "rgba(255,255,255,0)", transition: { duration: 0.15 } }}
+      initial={{ backgroundColor: "rgba(4,47,34,0)" }}
+      animate={{ backgroundColor: "rgba(4,47,34,0.35)" }}
+      exit={{ backgroundColor: "rgba(4,47,34,0)", transition: { duration: 0.15 } }}
       transition={{ duration: 0.4 }}
       onClick={onClose}
-      style={{ backdropFilter: "blur(6px)" }}
+      className="fixed inset-0 z-[150] flex items-center justify-center p-2 sm:p-4 md:p-8 overflow-hidden glass-strong"
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className={`relative bg-white rounded-[20px] sm:rounded-[32px] md:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] sm:shadow-[0_40px_100px_rgba(0,0,0,0.2),_0_0_0_1px_rgba(0,0,0,0.03)] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-3 sm:p-4 gap-4 sm:gap-8 md:gap-12`}
+        className={`relative rounded-[20px] sm:rounded-[32px] md:rounded-[40px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-4 sm:p-6 gap-4 sm:gap-8 md:gap-12 glass-modal`}
         style={{
           width: "1150px",
           maxWidth: "95vw",
           maxHeight: "90vh",
           height: isExpandDown ? "auto" : undefined,
-          minHeight: isExpandDown ? "auto" : undefined,
+          minHeight: isExpandDown ? "auto" : "min(75vh, 600px)",
           overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+        {/* Close Button – glassmorphism */}
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/5 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white active:bg-black active:text-white transition-all shadow-sm group"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
         {/* Video/Media Section */}
-        <div className={`${isExpandDown ? 'w-full h-[200px] sm:h-[300px] md:h-[400px]' : 'w-full md:w-[50%] h-[200px] sm:h-[280px] md:h-full'} relative bg-black shrink-0 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`}>
+        <div className={`${isExpandDown ? 'w-full h-[200px] sm:h-[300px] md:h-[400px]' : 'w-full md:w-[50%] min-h-[250px] sm:min-h-[350px] md:min-h-[400px]'} relative bg-black shrink-0 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`} style={{ flex: isExpandDown ? undefined : '1 1 auto' }}>
           {isImageOrSlideshow ? (
             <AnimatePresence>
               <motion.img
@@ -777,14 +783,14 @@ function CenterHoverModal({ video, onClose }) {
         </div>
 
         {/* Details Section */}
-        <div className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} flex flex-col justify-center bg-white`} style={{
+        <div className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} flex flex-col justify-center`} style={{
           fontFamily: "'Inter', sans-serif",
-          padding: isExpandDown ? 'clamp(16px, 3vw, 32px)' : 'clamp(16px, 3vw, 32px) clamp(16px, 5vw, 80px)'
+          padding: isExpandDown ? 'clamp(16px, 3vw, 32px)' : 'clamp(16px, 3vw, 32px) clamp(16px, 5vw, 80px)',
         }}>
           <div className="flex items-center gap-3 mb-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#20C997]/10 border border-[#20C997]/20">
-              <div className="w-2 h-2 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 10px rgba(32,201,151,0.5)" }} />
-              <span className="text-[#0d9488] text-[10px] uppercase tracking-[0.25em] font-black">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-subtle">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 12px rgba(32,201,151,0.6)" }} />
+              <span className="text-[#0d7c66] text-[10px] uppercase tracking-[0.25em] font-black">
                 Preview
               </span>
             </div>
