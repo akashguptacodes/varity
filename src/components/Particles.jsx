@@ -23,9 +23,9 @@ export default function Particles({ count = 200, mousePosition }) {
     return { positions, sizes, speeds };
   }, [count]);
 
-  useFrame((state) => {
+  useFrame(({ clock }) => {
     if (!meshRef.current) return;
-    const time = state.clock.getElapsedTime();
+    const time = clock.getElapsedTime();
     const posArray = meshRef.current.geometry.attributes.position.array;
 
     for (let i = 0; i < count; i++) {

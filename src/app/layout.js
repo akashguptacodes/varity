@@ -1,16 +1,7 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Navbar from "@/components/Navbar";
 
 export const viewport = {
   width: "device-width",
@@ -66,7 +57,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -75,7 +66,7 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap"
           rel="stylesheet"
         />
         {process.env.NODE_ENV === "development" && (
@@ -86,7 +77,8 @@ export default function RootLayout({ children }) {
           />
         )}
       </head>
-      <body className="min-h-screen bg-white text-[#1a1a2e] antialiased">
+      <body className={`min-h-screen bg-white text-[#1a1a2e] antialiased`} style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+        <Navbar />
         {children}
         {/* Subtle dot pattern overlay */}
         <div className="dot-overlay" aria-hidden="true" />

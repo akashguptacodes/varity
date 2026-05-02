@@ -14,6 +14,10 @@
   --glass-border: rgba(13, 124, 102, 0.1);
   --surface: #f8faf9;
   --surface-hover: #f0faf6;
+  --font-primary: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-heading: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-logo: 'Playfair Display', serif;
+  --font-arimo: var(--font-primary);
 }
 
 @theme inline {
@@ -22,8 +26,8 @@
   --color-accent-green: var(--accent-green);
   --color-accent-teal: var(--accent-teal);
   --color-accent-emerald: var(--accent-emerald);
-  --font-sans: 'Inter', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans: var(--font-primary);
+  --font-display: var(--font-primary);
 }
 
 * {
@@ -41,7 +45,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-primary);
   overflow-x: hidden;
   min-height: 100vh;
   /* Responsive base font using clamp */

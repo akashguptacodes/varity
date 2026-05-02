@@ -162,9 +162,9 @@ export const getComplexColumns = (categoryId = 1) => {
   }
 
   return [
-    { id: "col-a", speed: -0.8, offsetTop: 140, items: colA },       // Col 1: Slowest (wide column)
-    { id: "col-b", speed: -2.5, offsetTop: 40, items: colB },        // Col 2: Medium-fast (middle column)
-    { id: "col-c", speed: -1.5, offsetTop: 0, items: colC }          // Col 3: Medium (right column)
+    { id: "col-a", speed: -0.4, offsetTop: 60, items: colA },       // Col 1: Slowest (wide column)
+    { id: "col-b", speed: -1.2, offsetTop: 20, items: colB },        // Col 2: Medium-fast (middle column)
+    { id: "col-c", speed: -0.7, offsetTop: 0, items: colC }          // Col 3: Medium (right column)
   ];
 };
 

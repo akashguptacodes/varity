@@ -1,72 +1,64 @@
 "use client";
 
-import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Footer() {
-  const links = {
-    Product: ["Features", "Pricing", "Templates", "Integrations"],
-    Resources: ["Documentation", "Tutorials", "Blog", "Changelog"],
-    Company: ["About", "Careers", "Press", "Contact"],
-    Legal: ["Privacy", "Terms", "Security"],
-  };
-
   return (
-    <footer className="relative z-20 bg-[#f8faf9] border-t border-[#0d7c66]/8" style={{ paddingTop: 'clamp(40px, 8vw, 64px)', paddingBottom: 'clamp(24px, 4vw, 32px)' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0d7c66] to-[#10b981] flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 3L12 8L4 13V3Z" fill="white"/>
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-[#1a1a2e]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Verity
-              </span>
-            </div>
-            <p className="text-sm text-[#1a1a2e]/35 leading-relaxed">
-              AI-powered video editing for the modern creator.
-            </p>
-          </div>
-
-          {/* Link columns */}
-          {Object.entries(links).map(([category, items]) => (
-            <div key={category}>
-              <h4 className="text-sm font-semibold text-[#1a1a2e]/70 mb-4">{category}</h4>
-              <ul className="space-y-2.5">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a
-                      href="#"
-                      className="text-sm text-[#1a1a2e]/35 hover:text-[#0d7c66] transition-colors duration-300"
-                    >
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom bar */}
-        <div className="border-t border-[#0d7c66]/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-[#1a1a2e]/25">
-            © 2026 Verity. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            {["Twitter", "GitHub", "Discord", "YouTube"].map((social) => (
+    <footer className="relative w-full bg-[#fbfcfb] overflow-hidden mt-16 sm:mt-24 md:mt-32 shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] z-30">
+      <div className="relative z-20 w-full bg-[#fbfcfb]">
+        {/* Footer links bar — merged seamlessly, no border separator */}
+        <div
+          className="w-full flex flex-col md:flex-row items-center justify-between py-8 pt-16 sm:pt-20 md:pt-24"
+          style={{ paddingLeft: 'clamp(16px, 7vw, 7vw)', paddingRight: 'clamp(16px, 7vw, 7vw)' }}
+        >
+          {/* Left: Social links */}
+          <div className="flex items-center gap-7 md:gap-10">
+            {["Instagram", "YouTube", "X", "LinkedIn"].map((name) => (
               <a
-                key={social}
+                key={name}
                 href="#"
-                className="text-xs text-[#1a1a2e]/25 hover:text-[#0d7c66] transition-colors duration-300"
+                className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
               >
-                {social}
+                {name}
               </a>
             ))}
           </div>
+
+          {/* Center: Logo */}
+          <div className="my-5 md:my-0">
+            <div className="w-[48px] h-[48px] rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform shadow-md relative border border-white/60">
+              <Image
+                src="/images/logo.jpeg"
+                alt="Verity Logo"
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
+            </div>
+          </div>
+
+          {/* Right: Legal links */}
+          <div className="flex items-center gap-7 md:gap-10">
+            {["Careers", "Terms", "Privacy"].map((name) => (
+              <a
+                key={name}
+                href="#"
+                className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
+              >
+                {name}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Brand text spanning full width — like Cosmos */}
+        <div className="w-full overflow-hidden pb-6 sm:pb-10 md:pb-14" style={{ paddingLeft: '4vw', paddingRight: '4vw' }}>
+          <h1
+            className="text-[#042f22] text-[16vw] md:text-[14vw] font-black leading-[0.85] tracking-tighter text-center select-none uppercase"
+            style={{ fontFamily: 'var(--font-logo)' }}
+          >
+            VERITY
+          </h1>
         </div>
       </div>
     </footer>

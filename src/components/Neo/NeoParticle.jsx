@@ -2,9 +2,11 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { generateSpherePositions } from './NeoUtils/sphere';
 
-const ParticleSphere = ({ color, inView, isMobile = false }) => {
+const ParticleSphere = ({ color, inView, isMobile = false, particleCount, particleSize }) => {
   const points = useRef();
-  const { positions, particlesCount } = useMemo(() => generateSpherePositions(isMobile ? 1500 : 10000), [isMobile]);
+  const resolvedCount = particleCount ?? (isMobile ? 1500 : 10000);
+  const resolvedSize = particleSize ?? 0.03;
+  const { positions, particlesCount } = useMemo(() => generateSpherePositions(resolvedCount), [resolvedCount]);
   
   // Store original positions for stable displacement calculations
   const originalPositions = useMemo(() => new Float32Array(positions), [positions]);
@@ -68,7 +70,7 @@ const ParticleSphere = ({ color, inView, isMobile = false }) => {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
+        size={resolvedSize}
         color={color}
         sizeAttenuation={true}
       />

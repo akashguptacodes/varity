@@ -2,8 +2,18 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import CalendlyButton from "@/components/CalendlyButton";
 import Tilt from "react-parallax-tilt";
+
+const Neo = dynamic(() => import("@/components/Neo/Neo"), { ssr: false });
+const StoryVisualOrb = dynamic(() => import("@/components/StoryVisualOrb"), { ssr: false });
+
+const staggerContainer = { hidden: {}, visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } } };
+const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } };
+const fadeIn = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 1 } } };
+const scaleIn = { hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } };
 
 // Categories data for Bento Grid
 const CATEGORIES_DATA = [
@@ -74,88 +84,85 @@ export default function AboutPage() {
 
       {/* Fonts loaded via globals.css */}
 
-      {/* ═══════════════ NAVIGATION ═══════════════ */}
-      <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-auto glass-nav"
-        style={{ padding: "20px clamp(28px, 6vw, 80px)" }}
-      >
-        <a href="/" className="flex items-center gap-3 group">
-          <div className="w-[44px] h-[44px] bg-[#0d7c66] rounded-full flex items-center justify-center cursor-pointer group-hover:scale-110 transition-transform shadow-md">
-            <span
-              className="text-white text-[22px] italic font-bold pr-0.5"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              V
-            </span>
-          </div>
-        </a>
-        <a
-          href="/"
-          className="group flex items-center gap-2 text-[12px] md:text-[13px] font-bold tracking-[0.15em] uppercase text-[#042f22] hover:text-[#065f46] transition-all duration-400 rounded-full px-5 py-2.5 shadow-[0_4px_16px_rgba(13,124,102,0.06)] hover:shadow-[0_8px_24px_rgba(13,124,102,0.12)] hover:-translate-y-0.5"
-          style={{ 
-            fontFamily: "'Inter', sans-serif", 
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(239,248,246,0.6))', 
-            backdropFilter: 'blur(16px) saturate(1.5)', 
-            WebkitBackdropFilter: 'blur(16px) saturate(1.5)', 
-            border: '1px solid rgba(32,201,151,0.2)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)'
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-1 transition-transform duration-300"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-          Back to Home
-        </a>
-      </motion.nav>
 
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative w-full min-h-[92vh] flex flex-col justify-center items-center overflow-hidden shadow-[0_20px_60px_rgba(13,124,102,0.08)] rounded-b-[40px] sm:rounded-b-[60px] z-10">
+      <section className="relative w-full min-h-[100vh] flex flex-col justify-center items-center overflow-hidden z-10">
         {/* Background decorative elements */}
-        <div className="absolute top-[-10%] right-[-10%] w-[700px] h-[700px] bg-[#20C997]/[0.03] rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-[#042f22]/[0.02] rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-[30%] left-[15%] w-[200px] h-[200px] bg-[#20C997]/[0.04] rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[700px] h-[700px] bg-[#20C997]/[0.04] rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-[#042f22]/[0.03] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-[30%] left-[15%] w-[200px] h-[200px] bg-[#20C997]/[0.05] rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[20%] w-[300px] h-[300px] bg-[#065f46]/[0.03] rounded-full blur-[100px] pointer-events-none" />
+
+        {/* Neo Blob Background — click & drag to rotate */}
+        <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing">
+          <div className="w-[380px] h-[380px] sm:w-[480px] sm:h-[480px] md:w-[600px] md:h-[600px] lg:w-[720px] lg:h-[720px]" style={{ opacity: 0.55 }}>
+            <Neo
+              color="#20C997"
+              isPlaying={true}
+              particleCount={15000}
+              particleSize={0.025}
+              cameraZ={5}
+              enableRotate={false}
+            />
+          </div>
+        </div>
+
+        {/* Floating geometric accents */}
+        <motion.div
+          className="absolute top-[18%] right-[12%] w-3 h-3 rounded-full border border-[#20C997]/30 pointer-events-none hidden md:block"
+          animate={{ y: [0, -20, 0], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-[25%] left-[8%] w-2 h-2 rounded-full bg-[#20C997]/20 pointer-events-none hidden md:block"
+          animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-[40%] right-[25%] w-16 h-[1px] bg-gradient-to-r from-transparent via-[#20C997]/20 to-transparent pointer-events-none hidden lg:block"
+          animate={{ opacity: [0, 0.5, 0], scaleX: [0.5, 1, 0.5] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
 
         <motion.div
           style={{ y: heroY, margin: "0 auto", padding: "0 clamp(28px, 6vw, 80px)" }}
           className="relative z-10 flex flex-col items-center justify-center w-full max-w-7xl text-center"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
         >
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            variants={fadeUp}
             className="inline-flex items-center gap-3 rounded-full hover:scale-105 transition-transform duration-500 cursor-default"
             style={{ padding: "10px 24px", marginBottom: "48px", background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3))', backdropFilter: 'blur(20px) saturate(1.5)', WebkitBackdropFilter: 'blur(20px) saturate(1.5)', border: '1px solid rgba(32,201,151,0.3)', boxShadow: '0 8px 32px rgba(13,124,102,0.1), inset 0 2px 0 rgba(255,255,255,0.6)' }}
           >
             <span className="w-2 h-2 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: '0 0 10px rgba(32,201,151,0.8)' }} />
-            <span className="text-[#0d7c66] font-bold tracking-[0.15em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <span className="text-[#0d7c66] font-bold tracking-[0.15em] text-[11px] uppercase" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
               Elevating Visual Storytelling
             </span>
           </motion.div>
 
-          {/* Title */}
+          {/* Title — staggered word reveal */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            variants={fadeUp}
             className="text-[3.2rem] sm:text-[4.5rem] md:text-[5.5rem] lg:text-[7rem] font-black tracking-[-0.03em] text-[#042f22] leading-[0.95]"
-            style={{ fontFamily: "'Playfair Display', serif", marginBottom: "36px" }}
+            style={{ fontFamily: 'var(--font-heading)', marginBottom: "36px" }}
           >
-            About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#20C997] to-[#065f46]">
+            <motion.span className="inline-block" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}>
+              About{" "}
+            </motion.span>
+            <motion.span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#20C997] via-[#0d7c66] to-[#065f46] animate-gradient" style={{ backgroundSize: '200% 200%' }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}>
               Verity
-            </span>
+            </motion.span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            variants={fadeUp}
             className="text-base sm:text-lg md:text-xl text-[#64748b] leading-[1.85] max-w-2xl mx-auto font-light"
-            style={{ fontFamily: "'Inter', sans-serif", marginBottom: "20px" }}
+            style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "20px" }}
           >
             Revolutionizing video creation through AI-powered tools and cinematic expertise. We empower creators to tell compelling stories with professional-grade polish.
           </motion.p>
@@ -164,16 +171,16 @@ export default function AboutPage() {
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
-            transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="w-16 h-[3px] bg-gradient-to-r from-[#20C997] to-transparent rounded-full origin-center"
+            transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-20 h-[2px] bg-gradient-to-r from-transparent via-[#20C997] to-transparent rounded-full origin-center"
             style={{ marginBottom: "48px" }}
           />
 
           {/* Scroll indicator */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 1 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.4, duration: 1 }}
           >
             <div className="w-8 h-14 rounded-full flex justify-center pt-2.5" style={{ border: '1px solid rgba(32,201,151,0.3)', background: 'linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2))', backdropFilter: 'blur(16px) saturate(1.5)', WebkitBackdropFilter: 'blur(16px) saturate(1.5)', boxShadow: '0 8px 24px rgba(13,124,102,0.08), inset 0 1px 0 rgba(255,255,255,0.5)' }}>
               <motion.div
@@ -188,84 +195,217 @@ export default function AboutPage() {
       </section>
 
 
-      {/* ═══════════════ OUR STORY ═══════════════ */}
-      <section className="relative bg-white border-t border-[#042f22]/[0.04] shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] rounded-b-[40px] sm:rounded-b-[60px] shadow-[0_20px_60px_rgba(13,124,102,0.08)] z-20 mt-12 sm:mt-16">
-        <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
-          <div className="grid lg:grid-cols-2 items-center" style={{ gap: "clamp(48px, 6vw, 100px)" }}>
 
-            {/* Text */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <p className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif", marginBottom: "16px" }}>
-                Our Story
-              </p>
-              <h2
-                className="text-3xl md:text-4xl lg:text-[3.25rem] font-bold text-[#042f22] leading-[1.12] tracking-[-0.02em]"
-                style={{ fontFamily: "'Playfair Display', serif", marginBottom: "28px" }}
+      {/* ═══════════════ OUR STORY (PREMIUM) ═══════════════ */}
+      <section className="relative bg-white rounded-[40px] sm:rounded-[60px] z-20 mt-4 sm:mt-8 overflow-hidden group/section border border-[#042f22]/[0.02]" style={{ boxShadow: '0 -10px 40px rgba(13,124,102,0.03), 0 20px 60px rgba(13,124,102,0.04)' }}>
+        {/* Cinematic Background Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#fbfcfb] to-[#f4f9f7] pointer-events-none" />
+        <motion.div 
+          className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-[#20C997]/[0.015] rounded-full blur-[100px] pointer-events-none"
+          animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] bg-[#065f46]/[0.015] rounded-full blur-[120px] pointer-events-none"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+
+        <div className="relative z-10 w-full max-w-[88rem] mx-auto" style={{ padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 80px)" }}>
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] items-center gap-[clamp(48px,8vw,120px)]">
+
+            {/* ── LEFT: PREMIUM TYPOGRAPHY ── */}
+            <div className="relative">
+              {/* Subtle accent line behind text */}
+              <div className="absolute left-[-24px] top-0 bottom-0 w-[1px] bg-gradient-to-b from-[#20C997]/0 via-[#20C997]/20 to-[#20C997]/0 hidden md:block" />
+
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={{
+                  hidden: {},
+                  visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+                }}
               >
-                Born from a Passion<br className="hidden lg:block" /> for Cinema
-              </h2>
+                {/* Eyebrow */}
+                <div className="overflow-hidden mb-6">
+                  <motion.div
+                    variants={{
+                      hidden: { y: "100%" },
+                      visible: { y: "0%", transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+                    }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="w-8 h-[1px] bg-[#20C997]" />
+                    <span className="text-[#20C997] font-semibold tracking-[0.25em] text-[11px] uppercase" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+                      Our Story
+                    </span>
+                  </motion.div>
+                </div>
 
-              <div className="w-14 h-[3px] bg-gradient-to-r from-[#20C997] to-transparent rounded-full" style={{ marginBottom: "32px" }} />
+                {/* Main Heading with Masking Reveal */}
+                <div className="mb-10">
+                  <h2 
+                    className="text-4xl md:text-5xl lg:text-[4rem] font-bold text-[#042f22] leading-[1.05] tracking-[-0.03em] pb-2"
+                    style={{ fontFamily: 'var(--font-heading)' }}
+                  >
+                    <div className="overflow-hidden">
+                      <motion.div
+                        variants={{
+                          hidden: { y: "105%", rotate: 2 },
+                          visible: { y: "0%", rotate: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
+                        }}
+                        style={{ transformOrigin: "left bottom" }}
+                      >
+                        Born from a Passion
+                      </motion.div>
+                    </div>
+                    <div className="overflow-hidden">
+                      <motion.div
+                        variants={{
+                          hidden: { y: "105%", rotate: 2 },
+                          visible: { y: "0%", rotate: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
+                        }}
+                        style={{ transformOrigin: "left bottom" }}
+                        className="text-transparent bg-clip-text bg-gradient-to-r from-[#042f22] to-[#0d7c66]"
+                      >
+                        for Cinema
+                      </motion.div>
+                    </div>
+                  </h2>
+                </div>
 
-              <div className="text-[#64748b] text-base lg:text-[17px] leading-[1.9]" style={{ fontFamily: "'Inter', sans-serif" }}>
-                <p style={{ marginBottom: "20px" }}>
-                  Verity was founded with a singular mission: to democratize Hollywood-tier video creation. Every story deserves to be heard with cinematic authority.
-                </p>
-                <p>
-                  Combining heavily curated AI rendering with aggressive performance engineering, we've bridged the gap between rapid creative visions and final, flawless exports.
-                </p>
-              </div>
-            </motion.div>
+                {/* Animated Expanding Divider */}
+                <motion.div 
+                  variants={{
+                    hidden: { scaleX: 0, opacity: 0 },
+                    visible: { scaleX: 1, opacity: 1, transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
+                  }}
+                  style={{ transformOrigin: "left center", marginBottom: "40px" }}
+                  className="w-20 h-[2px] bg-gradient-to-r from-[#20C997] to-transparent rounded-full" 
+                />
 
-            {/* Visual */}
+                {/* Paragraphs */}
+                <div className="space-y-6 text-[#64748b] text-[17px] md:text-[19px] leading-[1.8] font-light" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+                  <motion.p
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+                    }}
+                  >
+                    Verity was founded with a singular mission: to democratize Hollywood-tier video creation. We believe every story deserves to be heard with absolute cinematic authority.
+                  </motion.p>
+                  <motion.p
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+                    }}
+                  >
+                    By combining heavily curated AI rendering with aggressive performance engineering, we've successfully bridged the gap between rapid creative visions and final, flawless exports.
+                  </motion.p>
+                </div>
+              </motion.div>
+            </div>
+
+
+            {/* ── RIGHT: CINEMATIC VISUAL BLOCK ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full aspect-[4/3] max-w-[520px] mx-auto lg:mx-0 lg:ml-auto overflow-hidden flex justify-center items-center group"
-              style={{ borderRadius: '2.5rem', background: 'linear-gradient(145deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1))', backdropFilter: 'blur(24px) saturate(1.8)', WebkitBackdropFilter: 'blur(24px) saturate(1.8)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 24px 80px rgba(13,124,102,0.12), inset 0 2px 0 rgba(255,255,255,0.8), inset 0 0 20px rgba(255,255,255,0.5)' }}
+              initial={{ opacity: 0, scale: 0.95, y: 40 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full aspect-[4/4] sm:aspect-[4/3] lg:aspect-square max-w-[600px] mx-auto lg:ml-auto group cursor-default perspective-1000"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(32,201,151,0.15)_0%,transparent_70%)] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-              {/* Subtle grid pattern */}
-              <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, #042f22 1.5px, transparent 1.5px)", backgroundSize: "24px 24px" }} />
-              <div className="text-[100px] md:text-[140px] drop-shadow-2xl opacity-90 select-none group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-500">🎬</div>
+              <Tilt 
+                tiltMaxAngleX={4} 
+                tiltMaxAngleY={4} 
+                glareEnable={true} 
+                glareMaxOpacity={0.15} 
+                glarePosition="all"
+                scale={1.02} 
+                transitionSpeed={2500} 
+                className="w-full h-full relative z-10"
+              >
+                {/* Glassmorphism Card Base */}
+                <div 
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ 
+                    borderRadius: '2.5rem', 
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.7), rgba(239,248,246,0.4))', 
+                    backdropFilter: 'blur(30px) saturate(2)', 
+                    WebkitBackdropFilter: 'blur(30px) saturate(2)', 
+                    border: '1px solid rgba(255,255,255,0.8)', 
+                    boxShadow: '0 30px 80px rgba(4,47,34,0.08), inset 0 2px 0 rgba(255,255,255,1), inset 0 0 40px rgba(32,201,151,0.05)' 
+                  }}
+                >
+                  {/* Subtle Grid Pattern Overlay */}
+                  <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#042f22 1px, transparent 1px), linear-gradient(90deg, #042f22 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+                  
+                  {/* Internal Glow Blob */}
+                  <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[radial-gradient(ellipse_at_center,rgba(32,201,151,0.2)_0%,transparent_70%)] pointer-events-none group-hover:scale-110 group-hover:opacity-80 transition-all duration-1000 ease-out" />
+                </div>
+
+                {/* 3D Cinematic Orb Container */}
+                <div className="absolute inset-0 z-0 pointer-events-none mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity duration-700">
+                  <StoryVisualOrb />
+                </div>
+
+                {/* Floating Elements / Iconography */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <motion.div 
+                    className="relative"
+                    animate={{ y: [-8, 8, -8] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <div className="absolute inset-0 bg-[#20C997] blur-[40px] opacity-20 rounded-full group-hover:opacity-40 transition-opacity duration-700" />
+                    <span className="text-[90px] sm:text-[110px] md:text-[140px] drop-shadow-[0_20px_40px_rgba(4,47,34,0.15)] select-none block transition-transform duration-700 ease-out group-hover:scale-110 group-hover:-rotate-6">
+                      🎬
+                    </span>
+                  </motion.div>
+                </div>
+
+                {/* Premium Border Highlight Reveal */}
+                <div className="absolute inset-0 rounded-[2.5rem] border border-transparent bg-gradient-to-b from-[#20C997]/0 via-[#20C997]/0 to-[#20C997]/0 group-hover:from-[#20C997]/20 group-hover:via-transparent transition-all duration-700 pointer-events-none mix-blend-overlay" />
+              </Tilt>
+
+              {/* External Soft Shadow Base */}
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[80%] h-12 bg-black/5 blur-[30px] rounded-full pointer-events-none group-hover:w-[90%] group-hover:bg-black/10 transition-all duration-700" />
             </motion.div>
+
           </div>
         </div>
       </section>
 
 
       {/* ═══════════════ STATS ═══════════════ */}
-      <section className="relative bg-[#042f22] overflow-hidden shadow-[0_-20px_60px_rgba(13,124,102,0.15)] rounded-[40px] sm:rounded-[60px] z-30 mt-12 sm:mt-16">
+      <section className="relative bg-[#042f22] overflow-hidden rounded-[40px] sm:rounded-[60px] z-30 mt-4 sm:mt-8" style={{ boxShadow: '0 -20px 60px rgba(13,124,102,0.12)' }}>
         {/* Decorative glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#20C997]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#20C997]/8 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#20C997]/5 rounded-full blur-[150px] pointer-events-none" />
 
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(72px, 8vw, 120px) clamp(28px, 6vw, 80px)" }}>
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7 }}
+            variants={staggerContainer}
             className="text-center"
             style={{ marginBottom: "clamp(48px, 5vw, 72px)" }}
           >
-            <p className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif", marginBottom: "16px" }}>
+            <motion.p variants={fadeUp} className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "16px" }}>
               Our Impact
-            </p>
-            <h2
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
               className="text-3xl md:text-4xl lg:text-[3.25rem] font-bold tracking-[-0.02em] text-white"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: 'var(--font-heading)', marginBottom: "16px" }}
             >
               Numbers That Speak
-            </h2>
+            </motion.h2>
+            <motion.div variants={fadeUp} className="w-12 h-[2px] bg-gradient-to-r from-transparent via-[#20C997] to-transparent mx-auto rounded-full" />
           </motion.div>
 
           {/* Grid */}
@@ -282,13 +422,13 @@ export default function AboutPage() {
                 >
                   <div
                     className="font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-[#20C997] to-[#6ee7b7] group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(32,201,151,0.3)]"
-                    style={{ fontFamily: "'Inter', sans-serif", letterSpacing: "-0.04em", fontSize: "clamp(3rem, 5vw, 4.5rem)", marginBottom: "12px" }}
+                    style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", letterSpacing: "-0.04em", fontSize: "clamp(3rem, 5vw, 4.5rem)", marginBottom: "12px" }}
                   >
                     {stat.value}
                   </div>
                   <div
                     className="text-white/60 font-bold tracking-[0.2em] uppercase text-[11px]"
-                    style={{ fontFamily: "'Inter', sans-serif" }}
+                    style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}
                   >
                     {stat.label}
                   </div>
@@ -301,29 +441,34 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ EXPERTISE BENTO GRID ═══════════════ */}
-      <section className="relative bg-[#fbfcfb]">
+      <section className="relative bg-[#fbfcfb] overflow-hidden">
+        {/* Ambient */}
+        <div className="absolute top-[20%] left-[5%] w-[350px] h-[350px] bg-[#20C997]/[0.03] rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-[10%] right-[10%] w-[250px] h-[250px] bg-[#065f46]/[0.02] rounded-full blur-[100px] pointer-events-none" />
+
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7 }}
+            variants={staggerContainer}
             className="flex flex-col items-center text-center"
             style={{ marginBottom: "clamp(40px, 5vw, 64px)" }}
           >
-            <p className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif", marginBottom: "16px" }}>
+            <motion.p variants={fadeUp} className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "16px" }}>
               What We Do
-            </p>
-            <h2
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
               className="text-3xl md:text-4xl lg:text-[3.25rem] font-bold tracking-[-0.02em] text-[#042f22]"
-              style={{ fontFamily: "'Playfair Display', serif", marginBottom: "16px" }}
+              style={{ fontFamily: 'var(--font-heading)', marginBottom: "16px" }}
             >
               Our Capabilities
-            </h2>
-            <p className="text-base md:text-lg text-[#94a3b8] max-w-lg mx-auto leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-base md:text-lg text-[#94a3b8] max-w-lg mx-auto leading-relaxed" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
               Purpose-built modules designed for massive creative leverage.
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Grid */}
@@ -353,12 +498,12 @@ export default function AboutPage() {
                   <div className="mt-6">
                     <h3
                       className="text-lg md:text-xl font-bold text-[#042f22] tracking-[-0.01em]"
-                      style={{ fontFamily: "'Inter', sans-serif", marginBottom: "8px" }}
+                      style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "8px" }}
                     >
                       {cat.title}
                     </h3>
 
-                    <p className="text-[#94a3b8] text-[13px] md:text-sm leading-[1.6]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <p className="text-[#94a3b8] text-[13px] md:text-sm leading-[1.6]" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
                       {cat.description}
                     </p>
                   </div>
@@ -371,27 +516,28 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="relative bg-white border-t border-[#042f22]/[0.04]">
+      <section className="relative bg-white overflow-hidden">
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7 }}
+            variants={staggerContainer}
             className="text-center"
             style={{ marginBottom: "clamp(48px, 5vw, 72px)" }}
           >
-            <p className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "'Inter', sans-serif", marginBottom: "16px" }}>
+            <motion.p variants={fadeUp} className="text-[#20C997] font-semibold tracking-[0.2em] text-[11px] uppercase" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "16px" }}>
               Why Verity
-            </p>
-            <h2
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
               className="text-3xl md:text-4xl lg:text-[3.25rem] font-bold tracking-[-0.02em] text-[#042f22]"
-              style={{ fontFamily: "'Playfair Display', serif", marginBottom: "16px" }}
+              style={{ fontFamily: 'var(--font-heading)', marginBottom: "16px" }}
             >
               Built for Scale
-            </h2>
-            <div className="w-12 h-[3px] bg-gradient-to-r from-[#20C997] to-transparent mx-auto rounded-full" />
+            </motion.h2>
+            <motion.div variants={fadeUp} className="w-12 h-[2px] bg-gradient-to-r from-transparent via-[#20C997] to-transparent mx-auto rounded-full" />
           </motion.div>
 
           {/* Grid */}
@@ -409,19 +555,19 @@ export default function AboutPage() {
                   <div className="text-3xl" style={{ marginBottom: "20px" }}>{feature.icon}</div>
                   <h3
                     className="text-lg md:text-xl font-bold text-[#042f22] tracking-[-0.01em]"
-                    style={{ fontFamily: "'Inter', sans-serif", marginBottom: "10px" }}
+                    style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "10px" }}
                   >
                     {feature.title}
                   </h3>
                   <p
                     className="text-[#94a3b8] text-sm md:text-[15px] leading-[1.75]"
-                    style={{ fontFamily: "'Inter', sans-serif", marginBottom: "28px" }}
+                    style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", marginBottom: "28px" }}
                   >
                     {feature.description}
                   </p>
                   <ul style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     {feature.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-center text-[#475569] font-medium text-[13px] md:text-[14px]" style={{ fontFamily: "'Inter', sans-serif", gap: "12px" }}>
+                      <li key={i} className="flex items-center text-[#475569] font-medium text-[13px] md:text-[14px]" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", gap: "12px" }}>
                         <div className="w-[6px] h-[6px] rounded-full bg-[#20C997] flex-shrink-0" />
                         {benefit}
                       </li>
@@ -439,17 +585,18 @@ export default function AboutPage() {
       <section className="relative bg-[#fbfcfb]">
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(60px, 8vw, 100px) clamp(28px, 6vw, 80px) clamp(80px, 10vw, 140px)" }}>
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.8 }}
-            className="relative bg-[#042f22] overflow-hidden"
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="relative bg-[#042f22] overflow-hidden group"
             style={{ borderRadius: "2.5rem" }}
           >
             {/* Decorative */}
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#20C997]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-20 -left-20 w-52 h-52 bg-[#20C997]/10 rounded-full blur-[80px] pointer-events-none" />
-            <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay" />
+            {/* Animated sheen */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 pointer-events-none" />
 
             <div
               className="relative z-10 flex flex-col md:flex-row items-center justify-between"
@@ -459,11 +606,11 @@ export default function AboutPage() {
               <div className="flex-1 text-center md:text-left">
                 <h2
                   className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-[1.15] tracking-[-0.02em]"
-                  style={{ fontFamily: "'Playfair Display', serif", marginBottom: "16px" }}
+                  style={{ fontFamily: 'var(--font-heading)', marginBottom: "16px" }}
                 >
                   Ready to roll?
                 </h2>
-                <p className="text-[#94a3b8] text-sm md:text-base lg:text-lg font-light max-w-md mx-auto md:mx-0 leading-[1.8]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p className="text-[#94a3b8] text-sm md:text-base lg:text-lg font-light max-w-md mx-auto md:mx-0 leading-[1.8]" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
                   Connect directly with our cinematic engineers. Completely free 30-minute scoping call.
                 </p>
               </div>
@@ -478,26 +625,62 @@ export default function AboutPage() {
       </section>
 
 
-      {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="relative" style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.6), rgba(220,242,235,0.4))', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(32,201,151,0.1)' }}>
-        <div
-          className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between"
-          style={{ margin: "0 auto", padding: "clamp(24px, 3vw, 40px) clamp(28px, 6vw, 80px)" }}
-        >
-          <p className="text-[#94a3b8] text-[13px] font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
-            © {new Date().getFullYear()} Verity. All rights reserved.
-          </p>
-          <div className="flex items-center" style={{ gap: "clamp(20px, 3vw, 36px)", marginTop: "12px" }}>
-            {["Instagram", "YouTube", "LinkedIn"].map((name) => (
-              <a
-                key={name}
-                href="#"
-                className="text-[13px] text-[#042f22]/50 font-medium hover:text-[#042f22] transition-colors duration-300"
-                style={{ fontFamily: "'Inter', sans-serif" }}
-              >
-                {name}
-              </a>
-            ))}
+      {/* ═══════════════ FOOTER (matching main page, without revolving cards) ═══════════════ */}
+      <footer className="relative w-full bg-[#fbfcfb] overflow-hidden mt-16 sm:mt-24 md:mt-32 shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] z-30">
+        <div className="relative z-20 w-full bg-[#fbfcfb]">
+          {/* Footer links bar */}
+          <div
+            className="w-full flex flex-col md:flex-row items-center justify-between py-8 pt-16 sm:pt-20 md:pt-24"
+            style={{ paddingLeft: 'clamp(16px, 7vw, 7vw)', paddingRight: 'clamp(16px, 7vw, 7vw)' }}
+          >
+            {/* Left: Social links */}
+            <div className="flex items-center gap-7 md:gap-10">
+              {["Instagram", "YouTube", "X", "LinkedIn"].map((name) => (
+                <a
+                  key={name}
+                  href="#"
+                  className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
+                >
+                  {name}
+                </a>
+              ))}
+            </div>
+
+            {/* Center: Logo */}
+            <div className="my-5 md:my-0">
+              <div className="w-[48px] h-[48px] rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform shadow-md relative border border-white/60">
+                <Image
+                  src="/images/logo.jpeg"
+                  alt="Verity Logo"
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              </div>
+            </div>
+
+            {/* Right: Legal links */}
+            <div className="flex items-center gap-7 md:gap-10">
+              {["Careers", "Terms", "Privacy"].map((name) => (
+                <a
+                  key={name}
+                  href="#"
+                  className="text-[13px] md:text-[14px] text-[#042f22]/70 font-medium hover:text-[#042f22] transition-colors duration-300"
+                >
+                  {name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Brand text spanning full width — like Cosmos */}
+          <div className="w-full overflow-hidden pb-6 sm:pb-10 md:pb-14" style={{ paddingLeft: '4vw', paddingRight: '4vw' }}>
+            <h1
+              className="text-[#042f22] text-[16vw] md:text-[14vw] font-black leading-[0.85] tracking-tighter text-center select-none uppercase"
+              style={{ fontFamily: 'var(--font-logo)' }}
+            >
+              VERITY
+            </h1>
           </div>
         </div>
       </footer>

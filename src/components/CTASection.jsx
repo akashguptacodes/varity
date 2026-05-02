@@ -20,7 +20,7 @@ export default function CTASection() {
         >
           <h2
             className="font-bold tracking-tight mb-6 text-[#1a1a2e]"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.1 }}
+            style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.1 }}
           >
             Ready to create{" "}
             <span className="text-gradient">something amazing</span>?

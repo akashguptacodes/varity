@@ -42,7 +42,7 @@ export default function FeaturesSection() {
           </span>
           <h2
             className="font-bold tracking-tight mb-5 text-[#1a1a2e]"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(32px, 5vw, 48px)' }}
+            style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 'clamp(32px, 5vw, 48px)' }}
           >
             Everything you need to{" "}
             <span className="text-gradient">create</span>
@@ -73,7 +73,7 @@ export default function FeaturesSection() {
                 <div className="text-3xl mb-4">{feature.icon}</div>
                 <h3
                   className="text-xl font-semibold mb-2 text-[#1a1a2e]"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}
                 >
                   {feature.title}
                 </h3>

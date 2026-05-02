@@ -14,6 +14,39 @@ const TEXTURE_PATHS = [
   "/images/orbit-11.jpg",
   "/images/orbit-13.jpg",
   "/images/orbit-2.jpg",
+  "/images/orbit-gd-1.jpg",
+  "/images/orbit-gd-2.jpg",
+  "/images/orbit-gd-4.jpg",
+  "/images/orbit-gd-5.jpg",
+  "/images/orbit-gd-6.jpg",
+  "/images/orbit-gd-7.jpg",
+  "/images/orbit-gd-8.jpg",
+  "/images/orbit-gd-9.jpg",
+  "/images/orbit-gd-10.jpg",
+  "/images/orbit-gd-11.jpg",
+  "/images/orbit-gd-12.jpg",
+  "/images/orbit-gd-13.jpg",
+  "/images/orbit-gd-14.jpg",
+  "/images/orbit-gd-15.jpg",
+  "/images/orbit-gd-16.jpg",
+  "/images/orbit-gd-17.jpg",
+  "/images/orbit-gd-18.jpg",
+  "/images/orbit-gd-19.jpg",
+  "/images/orbit-gd-20.jpg",
+  "/images/orbit-gd-21.jpg",
+  "/images/orbit-gd-22.jpg",
+  "/images/orbit-gd-23.jpg",
+  "/images/orbit-gd-24.jpg",
+  "/images/orbit-gd-25.jpg",
+  "/images/orbit-gd-26.jpg",
+  "/images/orbit-gd-27.jpg",
+  "/images/orbit-gd-28.jpg",
+  "/images/orbit-gd-29.jpg",
+  "/images/orbit-gd-30.jpg",
+  "/images/orbit-gd-31.jpg",
+  "/images/orbit-gd-32.jpg",
+  "/images/orbit-gd-33.jpg",
+  "/images/orbit-gd-34.jpg"
 ];
 
 const tempMatrix = new THREE.Matrix4();
@@ -57,35 +90,8 @@ function CameraRig({ mouseRef, isMobile }) {
   return null;
 }
 
-function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
+function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
   const texturesArr = useTexture(TEXTURE_PATHS);
-
-  const filteredCardData = CARD_DATA;
-
-  // Parse card data into exact order for instances
-  const groups = useMemo(() => {
-    const map = TEXTURE_PATHS.map((path, i) => ({
-      texture: texturesArr[i],
-      cards: [],
-    }));
-    
-    filteredCardData.forEach((card) => {
-      const idx = TEXTURE_PATHS.indexOf(card.texture);
-      if (idx !== -1) {
-        map[idx].cards.push({
-          ...card,
-          currentRadius: card.radius + 15,
-          currentSpeedMult: 15,
-          angleRef: card.angleOffset,
-          hover: 0,
-          hoverTarget: 0,
-        });
-      }
-    });
-    return map;
-  }, [texturesArr]);
-
-  const refs = useRef([]);
 
   // Compute Geometry once – reduce segments on mobile
   const sharedGeometry = useMemo(() => {
@@ -120,11 +126,29 @@ function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
   useEffect(() => {
     return () => {
       if (sharedGeometry) sharedGeometry.dispose();
-      texturesArr.forEach(t => t.dispose());
     };
-  }, [sharedGeometry, texturesArr]);
+  }, [sharedGeometry]);
 
-  // Frame counter for mobile throttling (update every other frame)
+  // Map each card to a random texture to make it look classy and varied
+  const cards = useMemo(() => {
+    // Create a shuffled array of texture indices to ensure maximum variety
+    const shuffledIndices = [];
+    for (let i = 0; i < CARD_DATA.length; i++) {
+      shuffledIndices.push(Math.floor(Math.random() * texturesArr.length));
+    }
+
+    return CARD_DATA.map((card, i) => {
+      return {
+        ...card,
+        resolvedTexture: texturesArr[shuffledIndices[i]],
+        currentRadius: card.radius + 15,
+        currentSpeedMult: 15,
+        angleRef: card.angleOffset,
+      };
+    });
+  }, [texturesArr]);
+
+  const refs = useRef([]);
   const frameCounter = useRef(0);
 
   useFrame((state, delta) => {
@@ -140,61 +164,52 @@ function InstancedCards({ scrollVelocityRef, mouseRef, isMobile }) {
 
     const sVel = scrollVelocityRef.current.val;
 
-    groups.forEach((group, gIdx) => {
-      const instMesh = refs.current[gIdx];
-      if (!instMesh) return;
+    cards.forEach((c, idx) => {
+      const mesh = refs.current[idx];
+      if (!mesh) return;
 
-      group.cards.forEach((c, idx) => {
-        c.currentRadius = lerp(c.currentRadius, c.radius, 0.03);
-        c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.02);
+      c.currentRadius = lerp(c.currentRadius, c.radius, 0.03);
+      c.currentSpeedMult = lerp(c.currentSpeedMult, 1, 0.02);
 
-        const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.08;
+      const dynamicSpeed = (c.speed * c.currentSpeedMult) + sVel * 0.08;
 
-        c.angleRef -= dynamicSpeed * delta;
-        const angle = c.angleRef;
+      c.angleRef -= dynamicSpeed * delta;
+      const angle = c.angleRef;
 
-        const worldX = c.currentRadius * Math.cos(angle);
-        const worldY = c.currentRadius * Math.sin(angle);
-        const worldZ = c.zOffset;
+      const worldX = c.currentRadius * Math.cos(angle);
+      const worldY = c.currentRadius * Math.sin(angle);
+      const worldZ = c.zOffset;
 
-        const parallaxStrength = isMobile ? 0.15 : 0.35 * (1 + c.zOffset * 0.02);
-        const mx = mouseRef.current.x * parallaxStrength;
-        const my = mouseRef.current.y * parallaxStrength;
+      const parallaxStrength = isMobile ? 0.15 : 0.35 * (1 + c.zOffset * 0.02);
+      const mx = mouseRef.current.x * parallaxStrength;
+      const my = mouseRef.current.y * parallaxStrength;
 
-        vec3.set(worldX + mx, worldY + my, worldZ);
-        
-        reusableEuler.set(0, 0, angle);
-        quaternion.setFromEuler(reusableEuler);
+      mesh.position.set(worldX + mx, worldY + my, worldZ);
+      mesh.rotation.z = angle;
 
-        const baseScale = c.scale;
-        const mobileScaleFactor = isMobile ? 0.75 : 1;
-        const targetScale = baseScale * mobileScaleFactor;
-        scaleVec.set(targetScale, targetScale, targetScale);
-
-        tempMatrix.compose(vec3, quaternion, scaleVec);
-        instMesh.setMatrixAt(idx, tempMatrix);
-      });
-      instMesh.instanceMatrix.needsUpdate = true;
+      const baseScale = c.scale;
+      const mobileScaleFactor = isMobile ? 0.75 : 1;
+      const targetScale = baseScale * mobileScaleFactor;
+      mesh.scale.set(targetScale, targetScale, targetScale);
     });
   });
 
   return (
-    <>
-      {groups.map((group, i) => (
-        <instancedMesh
+    <group>
+      {cards.map((card, i) => (
+        <mesh
           key={i}
           ref={(el) => { refs.current[i] = el; }}
-          args={[sharedGeometry, null, group.cards.length]}
-          raycast={() => null}
+          geometry={sharedGeometry}
         >
           <meshBasicMaterial
-            map={group.texture}
+            map={card.resolvedTexture}
             side={THREE.DoubleSide}
             transparent={false}
           />
-        </instancedMesh>
+        </mesh>
       ))}
-    </>
+    </group>
   );
 }
 
@@ -273,7 +288,7 @@ export default function Hero3D() {
             <color attach="background" args={["#fbfcfb"]} />
             <Suspense fallback={null}>
               <CameraRig mouseRef={mouseRef} isMobile={isMobile} />
-              <InstancedCards scrollVelocityRef={scrollVelocityRef} mouseRef={mouseRef} isMobile={isMobile} />
+              <OrbitingCards scrollVelocityRef={scrollVelocityRef} mouseRef={mouseRef} isMobile={isMobile} />
             </Suspense>
         </Canvas>
       </div>

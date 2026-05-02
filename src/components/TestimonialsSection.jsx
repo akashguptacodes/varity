@@ -70,7 +70,7 @@ export default function TestimonialsSection() {
   const baseX = useMotionValue(0);
   const itemWidth = 300;
   const slideTargetRef = useRef(null);
-  
+
   const { ref: inViewRef, inView } = useInView({
     rootMargin: "200px 0px",
   });
@@ -102,13 +102,9 @@ export default function TestimonialsSection() {
 
   return (
     <section
-      className="relative w-full min-h-[80vh] sm:min-h-screen mt-16 sm:mt-24 lg:mt-48 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-center border-t border-[#0d7c66]/10 py-12 sm:py-0"
+      className="relative w-full min-h-[100vh] sm:min-h-[120vh] pt-24 sm:pt-32 lg:pt-40 pb-12 sm:pb-24 bg-gradient-to-br from-[#fbfcfb] via-[#EFF8F6] to-[#f0f9f6] overflow-hidden flex flex-col items-center justify-start"
     >
       {/* Keyframes and fonts are in globals.css */}
-
-      {/* Enhanced Decorative Lights (Removed heavy animations for performance) */}
-      <div className="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] bg-gradient-radial from-[#20C997]/20 via-[#EFF8F6]/30 to-transparent blur-[180px] rounded-full pointer-events-none transform-gpu" />
-      <div className="absolute bottom-[-15%] right-[-15%] w-[50%] h-[50%] bg-gradient-radial from-[#0d7c66]/15 via-[#20C997]/10 to-transparent blur-[160px] rounded-full pointer-events-none transform-gpu" />
 
       {/* Additional ambient lights */}
       <div className="absolute top-[20%] right-[10%] w-[25%] h-[25%] bg-[#20C997]/5 blur-[100px] rounded-full pointer-events-none transform-gpu" />
@@ -116,11 +112,11 @@ export default function TestimonialsSection() {
 
       {/* Header */}
       <div
-        className="text-center mb-8 sm:mb-12 md:mb-16 z-20 relative flex flex-col items-center px-4"
+        className="text-center mb-12 sm:mb-16 md:mb-20 z-20 relative flex flex-col items-center px-4 mt-12 sm:mt-16 lg:mt-40"
       >
         <h2
           className="text-transparent bg-clip-text bg-gradient-to-r from-[#0d7c66] via-[#20C997] to-[#0d7c66] text-[28px] sm:text-[36px] md:text-[50px] lg:text-[65px] leading-[1.02] tracking-tight mb-4 sm:mb-6 uppercase font-black"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          style={{ fontFamily: 'var(--font-heading)' }}
         >
           Client Feedback
         </h2>
@@ -246,7 +242,7 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobil
         >
           <div className="absolute inset-0 rounded-[32px]" style={{ background: 'linear-gradient(145deg, rgba(32,201,151,0.06), rgba(13,124,102,0.03))', boxShadow: 'inset 0 0 0 1px rgba(32,201,151,0.1)' }} />
 
-          <div 
+          <div
             className="relative z-10 w-full h-full rounded-[24px] sm:rounded-[32px] flex flex-col justify-between"
             style={{ padding: "clamp(20px, 3vw, 32px)", background: 'linear-gradient(135deg, #ffffff 0%, #f5fbf9 100%)', boxShadow: '0 12px 40px rgba(13,124,102,0.08), inset 0 1px 1px rgba(255,255,255,0.8)', border: '1px solid rgba(32,201,151,0.12)' }}
           >
@@ -278,8 +274,8 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobil
                 </p>
               </div>
             </div>
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
       </Tilt>
     </motion.div>
   );

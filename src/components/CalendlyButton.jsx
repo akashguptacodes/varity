@@ -62,7 +62,7 @@ export default function CalendlyButton({
   };
 
   // Base Modern Button UI – smaller text on mobile
-  const baseClasses = "calendly-btn-pad rounded-full bg-gradient-to-r from-[#20C997] to-[#0d9488] text-white shadow-xl transition-all duration-300 ease-in-out hover:scale-105 hover:brightness-110 text-[13px] sm:text-[15px] md:text-[17px] font-bold flex items-center justify-center tracking-wide";
+  const baseClasses = `${inline ? '' : 'calendly-btn-pad'} rounded-full bg-gradient-to-r from-[#20C997] to-[#0d9488] text-white shadow-xl transition-all duration-300 ease-in-out hover:scale-105 hover:brightness-110 text-[13px] sm:text-[15px] md:text-[17px] font-bold flex items-center justify-center tracking-wide`;
   
   // Fix to bottom-right unless specified as inline – smaller position on mobile
   const positionClasses = inline ? "" : "fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[9999]";
