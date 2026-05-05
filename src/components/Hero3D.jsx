@@ -90,6 +90,48 @@ function CameraRig({ mouseRef, isMobile }) {
   return null;
 }
 
+/**
+ * Mobile-only card data — 3 tight orbits with larger cards.
+ * Ring 1 (inner):  5 cards, radius 3.2, scale 1.05
+ * Ring 2 (middle): 8 cards, radius 6.0, scale 1.25
+ * Ring 3 (outer): 11 cards, radius 9.5, scale 1.50
+ * Total: 24 cards (vs 44 desktop) — good density, bigger cards for small screens.
+ */
+function getMobileCardData() {
+  const total = 24;
+  return Array.from({ length: total }).map((_, i) => {
+    let radius, scale, angleOffset, speed, zOffset;
+
+    if (i < 5) {
+      // Ring 1 — tight inner ring (5 cards)
+      radius = 3.2;
+      scale = 1.05;
+      angleOffset = (i / 5) * Math.PI * 2;
+      speed = 0.22;
+      zOffset = 0;
+    } else if (i < 13) {
+      // Ring 2 — middle ring (8 cards)
+      radius = 6.0;
+      scale = 1.25;
+      angleOffset = ((i - 5) / 8) * Math.PI * 2;
+      speed = 0.15;
+      zOffset = -0.3;
+    } else {
+      // Ring 3 — outer ring (11 cards)
+      radius = 9.5;
+      scale = 1.50;
+      angleOffset = ((i - 13) / 11) * Math.PI * 2;
+      speed = 0.10;
+      zOffset = -0.6;
+    }
+
+    const tilt = Math.sin(angleOffset) * 0.15;
+    const texture = TEXTURE_PATHS[i % TEXTURE_PATHS.length];
+
+    return { id: i + 1, texture, radius, angleOffset, speed, scale, tilt, zOffset };
+  });
+}
+
 function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
   const texturesArr = useTexture(TEXTURE_PATHS);
 
@@ -129,15 +171,17 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
     };
   }, [sharedGeometry]);
 
+  // On mobile: use dedicated 3-ring layout. Desktop: full CARD_DATA untouched.
+  const sourceCards = useMemo(() => isMobile ? getMobileCardData() : CARD_DATA, [isMobile]);
+
   // Map each card to a random texture to make it look classy and varied
   const cards = useMemo(() => {
-    // Create a shuffled array of texture indices to ensure maximum variety
     const shuffledIndices = [];
-    for (let i = 0; i < CARD_DATA.length; i++) {
+    for (let i = 0; i < sourceCards.length; i++) {
       shuffledIndices.push(Math.floor(Math.random() * texturesArr.length));
     }
 
-    return CARD_DATA.map((card, i) => {
+    return sourceCards.map((card, i) => {
       return {
         ...card,
         resolvedTexture: texturesArr[shuffledIndices[i]],
@@ -146,7 +190,7 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
         angleRef: card.angleOffset,
       };
     });
-  }, [texturesArr]);
+  }, [texturesArr, sourceCards]);
 
   const refs = useRef([]);
   const frameCounter = useRef(0);
@@ -187,9 +231,9 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
       mesh.position.set(worldX + mx, worldY + my, worldZ);
       mesh.rotation.z = angle;
 
-      const baseScale = c.scale;
-      const mobileScaleFactor = isMobile ? 0.75 : 1;
-      const targetScale = baseScale * mobileScaleFactor;
+      // Mobile cards use their own scale values directly (already tuned in getMobileCardData)
+      // Desktop uses original CARD_DATA scales untouched
+      const targetScale = isMobile ? c.scale * 0.95 : c.scale;
       mesh.scale.set(targetScale, targetScale, targetScale);
     });
   });

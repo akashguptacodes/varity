@@ -45,6 +45,10 @@ export default function UIOverlay() {
             {/* CTA button – glassmorphism hover, touch-friendly sizing */}
             <a
               href="#categories"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="group relative inline-flex items-center justify-center text-white rounded-full font-medium active:scale-95 transition-all tracking-[0.05em] overflow-hidden"
               style={{
                 fontSize: 'clamp(13px, 1.2vw, 15px)',

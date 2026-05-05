@@ -19,44 +19,44 @@ export default function Navbar() {
   const categoryName = categoryId ? CATEGORIES[categoryId] : null;
 
   return (
-    <nav className="fixed top-6 sm:top-8 left-0 right-0 z-[100] flex justify-center w-full pointer-events-none px-6 md:px-10">
+    <nav className="fixed top-4 sm:top-8 left-4 right-0 z-[100] flex justify-center w-full pointer-events-none px-5 sm:px-6 md:px-10">
       <div className="w-full max-w-[1400px] flex items-center relative">
         
         {/* LEFT SECTION - Logo & Links */}
-        <div className="flex items-center gap-5 sm:gap-6">
+        <div className="flex items-center gap-2.5 sm:gap-6">
           
           {/* Logo Circle */}
           <Link 
             href="/" 
-            className="pointer-events-auto w-[52px] h-[52px] sm:w-[58px] sm:h-[58px] bg-[#fbfcfb] rounded-full flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:scale-105 transition-transform duration-300 shrink-0 border border-white/60 overflow-hidden relative group"
+            className="pointer-events-auto w-[42px] h-[42px] sm:w-[58px] sm:h-[58px] bg-white rounded-full flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] shrink-0 border border-white/60 overflow-hidden relative"
             aria-label="Home"
           >
             <Image 
               src="/images/logo.jpeg" 
               alt="Varity Logo" 
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-500"
-              sizes="58px"
+              width={40}
+              height={40}
+              className="w-[68%] h-[68%] sm:w-[70%] sm:h-[70%] object-contain"
               priority
             />
           </Link>
 
           {/* Nav Links Pill - Rock Solid Layout */}
-          <div className="pointer-events-auto h-[50px] sm:h-[56px] bg-white rounded-full flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+          <div className="pointer-events-auto h-[38px] sm:h-[56px] bg-white rounded-full flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
             <Link 
               href="/about" 
-              className="flex items-center justify-center text-[15px] sm:text-[16px] font-medium text-[#4b5563] hover:text-[#042f22] hover:bg-gray-50/50 transition-all font-sans tracking-wide leading-none h-full w-[90px] sm:w-[110px]"
+              className="flex items-center justify-center text-[12px] sm:text-[16px] font-medium text-[#4b5563] hover:text-[#042f22] hover:bg-gray-50/50 transition-all font-sans tracking-wide leading-none h-full w-[68px] sm:w-[110px]"
             >
               About us
             </Link>
 
-            <div className="w-[1.5px] h-[22px] bg-gray-400 shrink-0" />
+            <div className="w-[1px] sm:w-[1.5px] h-[16px] sm:h-[22px] bg-gray-400 shrink-0" />
             
             <CalendlyButton 
               text="Schedule" 
               url="https://calendly.com/akashgupta7484/30min"
               inline={true}
-              className="!flex !items-center !justify-center !bg-transparent !bg-none !h-full !w-[90px] sm:!w-[110px] !shadow-none !text-[15px] sm:!text-[16px] !font-medium !text-[#4b5563] hover:!text-[#042f22] hover:!bg-gray-50/50 hover:!scale-100 hover:!brightness-100 !font-sans !tracking-wide transition-all !leading-none !px-0 !m-0 !border-none !rounded-none"
+              className="!flex !items-center !justify-center !bg-transparent !bg-none !h-full !w-[68px] sm:!w-[110px] !shadow-none !text-[12px] sm:!text-[16px] !font-medium !text-[#4b5563] hover:!text-[#042f22] hover:!bg-gray-50/50 hover:!scale-100 hover:!brightness-100 !font-sans !tracking-wide transition-all !leading-none !px-0 !m-0 !border-none !rounded-none"
             />
           </div>
           

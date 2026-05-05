@@ -328,8 +328,8 @@ const FooterSection = () => {
         </div>
 
         {/* Heavy Radial Blur & White Fade from center — mirrors hero section */}
-        <div 
-          className="absolute inset-0 pointer-events-none z-[1]" 
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
           style={{
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
@@ -344,8 +344,20 @@ const FooterSection = () => {
           <div className="flex flex-col items-center pointer-events-auto max-w-2xl w-full">
 
             {/* Button-like pill with the headline */}
-            <div
-              className="group relative inline-flex items-center justify-center rounded-full overflow-hidden mb-6 sm:mb-8 md:mb-10 active:scale-95 transition-all cursor-default"
+            <a
+              href="https://calendly.com/akashgupta7484/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                const url = "https://calendly.com/akashgupta7484/30min";
+                if (window.Calendly) {
+                  window.Calendly.initPopupWidget({ url });
+                } else {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className="group relative inline-flex items-center justify-center rounded-full overflow-hidden mb-6 sm:mb-8 md:mb-10 active:scale-95 transition-all cursor-pointer"
               style={{
                 padding: 'clamp(16px, 2vw, 22px) clamp(32px, 5vw, 64px)',
                 background: 'linear-gradient(135deg, #0d7c66, #20C997)',
@@ -362,9 +374,9 @@ const FooterSection = () => {
                   lineHeight: 1.1,
                 }}
               >
-                Let&apos;s Work Together 🎥
+                Let&apos;s Work Together
               </span>
-            </div>
+            </a>
 
             {/* Subtitle */}
             <p
@@ -402,13 +414,13 @@ const FooterSection = () => {
 
           {/* Center: Logo */}
           <div className="my-5 md:my-0">
-            <div className="w-[48px] h-[48px] rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform shadow-md relative border border-white/60">
+            <div className="w-[48px] h-[48px] rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-white/60 overflow-hidden relative flex items-center justify-center bg-white">
               <Image
                 src="/images/logo.jpeg"
                 alt="Verity Logo"
-                fill
-                className="object-cover"
-                sizes="48px"
+                width={32}
+                height={32}
+                className="w-[70%] h-[70%] object-contain"
               />
             </div>
           </div>

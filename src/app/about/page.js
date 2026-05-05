@@ -21,25 +21,25 @@ const CATEGORIES_DATA = [
     id: 1,
     title: "AI Videos",
     description: "Intelligent scene generation & cinematic storytelling. Professional results with minimal effort.",
-    icon: "🤖",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12 2.1 7.1"/><path d="M12 12l9.9 4.9"/></svg>,
   },
   {
     id: 2,
     title: "Explainer Videos",
     description: "Transform complex ideas into engaging visual stories with stunning custom animations.",
-    icon: "🎬",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/></svg>,
   },
   {
     id: 3,
     title: "Posters & Graphics",
     description: "Eye-catching visual designs that capture attention and directly convey your brand message.",
-    icon: "🎨",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
   },
   {
     id: 4,
     title: "Talking Head Videos",
     description: "Professional talking head videos that build incredible trust and connection with your audience.",
-    icon: "🎤",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>,
   }
 ];
 
@@ -47,19 +47,19 @@ const FEATURES_DATA = [
   {
     title: "AI-Powered Editing",
     description: "Leverage cutting-edge artificial intelligence to automate tedious tasks and focus on the creative vision.",
-    icon: "⚡",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m13 2-2 2.5h3L11 22l2-2.5h-3L13 2Z"/><path d="M12 12v.01"/></svg>,
     benefits: ["50% faster editing", "Smart scene detection", "Auto color correction"]
   },
   {
     title: "Premium Quality",
     description: "Industry-standard video production with cinematic color science and broadcast-ready output.",
-    icon: "🎯",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
     benefits: ["4K resolution", "Pro audio mixing", "Broadcast standards"]
   },
   {
     title: "Cloud Collaboration",
     description: "Work seamlessly with your team anywhere via instant feedback loops and real-time preview.",
-    icon: "☁️",
+    icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>,
     benefits: ["Real-time rendering", "Browser-based", "Version history"]
   }
 ];
@@ -648,13 +648,13 @@ export default function AboutPage() {
 
             {/* Center: Logo */}
             <div className="my-5 md:my-0">
-              <div className="w-[48px] h-[48px] rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform shadow-md relative border border-white/60">
+              <div className="w-[48px] h-[48px] rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-white/60 overflow-hidden relative flex items-center justify-center bg-white">
                 <Image
                   src="/images/logo.jpeg"
                   alt="Verity Logo"
-                  fill
-                  className="object-cover"
-                  sizes="48px"
+                  width={32}
+                  height={32}
+                  className="w-[70%] h-[70%] object-contain"
                 />
               </div>
             </div>

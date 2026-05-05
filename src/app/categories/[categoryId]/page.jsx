@@ -1,7 +1,7 @@
-"use client";
+"use client"; // Mobile-responsive category page
 
 import { motion, useScroll, AnimatePresence, useSpring, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { getComplexColumns, getThumbnailUrl } from "@/lib/videoUtils";
 import { useParams, useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
@@ -22,6 +22,15 @@ export default function CategoryPage() {
   const overlayRef = useRef(null);
   const [scrollContainer, setScrollContainer] = useState(null);
   const [centerModalVideo, setCenterModalVideo] = useState(null);
+
+  // Mobile detection (SSR-safe) — used to flatten grid into single column
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (!overlayRef.current) return;
@@ -102,50 +111,56 @@ export default function CategoryPage() {
 
         {/* ── Parallax Bento Grid ── */}
         <div className="relative w-full max-w-[1800px] pb-[100px]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-2 md:gap-4 lg:gap-5 xl:gap-8 items-start">
-            {columns.map((col, ci) => (
-              <div
-                key={ci}
-                className={`flex flex-col gap-3 sm:gap-2 md:gap-4 lg:gap-5 xl:gap-8 ${ci === 0 ? "sm:col-span-2 md:col-span-2" : "col-span-1"}`}
-                style={{ paddingTop: col.offsetTop }}
-              >
-                <ParallaxColumnWrapper scrollYProgress={scrollYProgress} speed={col.speed}>
-                  {col.items.map((item, i) => {
-                    if (item.type === 'pair') {
-                      return (
-                        <div key={item.id} className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-5 xl:gap-8 w-full">
-                          <div className="w-full relative z-10 flex flex-col items-center">
+          {isMobile ? (
+            /* ── MOBILE: Pure single-column flat list — no pairs, no multi-column ── */
+            <MobileFlatList columns={columns} onCardClick={setCenterModalVideo} />
+          ) : (
+            /* ── DESKTOP: Original multi-column parallax bento grid (untouched) ── */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-5 xl:gap-8 items-start">
+              {columns.map((col, ci) => (
+                <div
+                  key={ci}
+                  className={`flex flex-col gap-4 md:gap-4 lg:gap-5 xl:gap-8 ${ci === 0 ? "md:col-span-2" : "col-span-1"}`}
+                  style={{ paddingTop: col.offsetTop }}
+                >
+                  <ParallaxColumnWrapper scrollYProgress={scrollYProgress} speed={col.speed}>
+                    {col.items.map((item, i) => {
+                      if (item.type === 'pair') {
+                        return (
+                          <div key={item.id} className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-5 xl:gap-8 w-full">
+                            <div className="w-full relative z-10 flex flex-col items-center">
+                              <FloatingCard
+                                card={item.pair[0]}
+                                enterDelay={ci * 0.08 + i * 0.12}
+                                onCardClick={setCenterModalVideo}
+                              />
+                            </div>
+                            <div className="w-full relative z-10 flex flex-col items-center">
+                              <FloatingCard
+                                card={item.pair[1]}
+                                enterDelay={ci * 0.08 + (i + 0.5) * 0.12}
+                                onCardClick={setCenterModalVideo}
+                              />
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div key={item.id} className="w-full relative z-10 flex flex-col items-center">
                             <FloatingCard
-                              card={item.pair[0]}
+                              card={item.card}
                               enterDelay={ci * 0.08 + i * 0.12}
                               onCardClick={setCenterModalVideo}
                             />
                           </div>
-                          <div className="w-full relative z-10 flex flex-col items-center">
-                            <FloatingCard
-                              card={item.pair[1]}
-                              enterDelay={ci * 0.08 + (i + 0.5) * 0.12}
-                              onCardClick={setCenterModalVideo}
-                            />
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div key={item.id} className="w-full relative z-10 flex flex-col items-center">
-                          <FloatingCard
-                            card={item.card}
-                            enterDelay={ci * 0.08 + i * 0.12}
-                            onCardClick={setCenterModalVideo}
-                          />
-                        </div>
-                      );
-                    }
-                  })}
-                </ParallaxColumnWrapper>
-              </div>
-            ))}
-          </div>
+                        );
+                      }
+                    })}
+                  </ParallaxColumnWrapper>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -257,6 +272,46 @@ function ParallaxColumnWrapper({ children, scrollYProgress, speed }) {
   );
 }
 
+/**
+ * MobileFlatList — flattens all columns and pairs into a single vertical list.
+ * Used only on mobile (<768px). No parallax, no multi-column, no pairs.
+ */
+function MobileFlatList({ columns, onCardClick }) {
+  // Extract every individual card from all columns, flattening pairs
+  const allCards = useMemo(() => {
+    const cards = [];
+    columns.forEach((col) => {
+      col.items.forEach((item) => {
+        if (item.type === 'pair') {
+          // Split pair into two individual cards
+          if (item.pair[0]) cards.push(item.pair[0]);
+          if (item.pair[1]) cards.push(item.pair[1]);
+        } else {
+          // single or wide
+          if (item.card) cards.push(item.card);
+        }
+      });
+    });
+    return cards;
+  }, [columns]);
+
+  return (
+    <div className="flex flex-col gap-4 w-full">
+      {allCards.map((card, i) => (
+        <div key={card.id || i} className="w-full relative z-10">
+          <FloatingCard
+            card={card}
+            enterDelay={i * 0.06}
+            onCardClick={onCardClick}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+
 function CenterHoverModal({ video, onClose }) {
   const isImageOrSlideshow = video.isImage || video.isSlideshow;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -280,7 +335,7 @@ function CenterHoverModal({ video, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-6 md:p-8 pointer-events-auto glass-strong"
+      className="fixed inset-0 z-[160] flex items-center justify-center p-2 sm:p-6 md:p-8 pointer-events-auto glass-strong"
       initial={{ backgroundColor: "rgba(4,47,34,0)" }}
       animate={{ backgroundColor: "rgba(4,47,34,0.35)" }}
       exit={{ backgroundColor: "rgba(4,47,34,0)", transition: { duration: 0.15 } }}
@@ -289,25 +344,32 @@ function CenterHoverModal({ video, onClose }) {
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className={`relative rounded-[20px] sm:rounded-[32px] md:rounded-[40px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-4 sm:p-6 gap-4 sm:gap-8 md:gap-12 glass-modal`}
+        className={`relative rounded-[16px] sm:rounded-[32px] md:rounded-[40px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-3 sm:p-6 gap-3 sm:gap-8 md:gap-12 bg-[#fbfcfb] shadow-2xl`}
         style={{
           width: "1150px",
-          maxWidth: "95vw",
-          maxHeight: "90vh",
+          maxWidth: "96vw",
+          maxHeight: "92vh",
           height: isExpandDown ? "auto" : undefined,
-          minHeight: isExpandDown ? "auto" : "min(75vh, 600px)",
+          minHeight: isExpandDown ? "auto" : undefined,
           overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
+          className="absolute top-2 right-2 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
-        <div className={`${isExpandDown ? 'w-full h-[200px] sm:h-[300px] md:h-[400px]' : 'w-full md:w-[50%] min-h-[250px] sm:min-h-[350px] md:min-h-[400px]'} relative bg-black shrink-0 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`} style={{ flex: isExpandDown ? undefined : '1 1 auto' }}>
+        {/* Video area — proper aspect ratio on mobile, flex-based on desktop */}
+        <div
+          className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} relative bg-black shrink-0 overflow-hidden rounded-[12px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`}
+          style={{
+            flex: isExpandDown ? undefined : '1 1 auto',
+            aspectRatio: '16 / 9',
+          }}
+        >
           {isImageOrSlideshow ? (
             <AnimatePresence>
               <motion.img
@@ -326,11 +388,11 @@ function CenterHoverModal({ video, onClose }) {
           ) : (
             <iframe
               src={`${video.src}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`}
-              className="absolute inset-0 w-full h-full object-fill"
-              style={{ objectFit: 'fill' }}
+              className="absolute inset-0 w-full h-full"
+              style={{ border: 'none' }}
               loading="lazy"
               allowFullScreen
-              allow="autoplay; encrypted-media"
+              allow="autoplay; encrypted-media; fullscreen"
               title={video.title}
             />
           )}
@@ -338,20 +400,20 @@ function CenterHoverModal({ video, onClose }) {
 
         <div className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} flex flex-col justify-center`} style={{
           fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif",
-          padding: isExpandDown ? 'clamp(16px, 3vw, 32px)' : 'clamp(16px, 3vw, 32px) clamp(16px, 5vw, 80px)',
+          padding: isExpandDown ? 'clamp(12px, 3vw, 32px)' : 'clamp(8px, 2vw, 32px) clamp(8px, 3vw, 80px)',
         }}>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-subtle">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 12px rgba(32,201,151,0.6)" }} />
-              <span className="text-[#0d7c66] text-[10px] uppercase tracking-[0.25em] font-black">
+          <div className="flex items-center gap-3 mb-4 sm:mb-8">
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-subtle">
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 12px rgba(32,201,151,0.6)" }} />
+              <span className="text-[#0d7c66] text-[9px] sm:text-[10px] uppercase tracking-[0.25em] font-black">
                 Preview
               </span>
             </div>
           </div>
-          <h4 className="text-[#042f22] text-[20px] sm:text-[28px] md:text-[36px] font-bold mb-4 sm:mb-6 leading-[1.1] tracking-tight">
+          <h4 className="text-[#042f22] text-[18px] sm:text-[28px] md:text-[36px] font-bold mb-2 sm:mb-6 leading-[1.1] tracking-tight">
             {video.title}
           </h4>
-          <p className="text-[#6b7280] text-[14px] sm:text-[16px] leading-[1.7] sm:leading-[1.8]">
+          <p className="text-[#6b7280] text-[13px] sm:text-[16px] leading-[1.6] sm:leading-[1.8]">
             {video.description}
           </p>
         </div>

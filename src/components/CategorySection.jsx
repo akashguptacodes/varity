@@ -6,16 +6,31 @@ import { useInView } from "react-intersection-observer";
 import Neo from "./Neo/Neo";
 import { useRouter } from "next/navigation";
 
+// Mobile detection hook (SSR-safe)
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 const CATEGORIES = [
   { id: 1, title: 'AI Videos', image: '/images/AIVideoEditing.jpeg' },
-  { id: 2, title: 'Explainer', image: '/images/Explainer.png' },
+  { id: 2, title: 'Explainer', image: '/images/RawVideoEditing.jpeg' },
   { id: 3, title: 'Posters', image: '/images/GraphicDesign.jpeg' },
-  { id: 4, title: 'Talking Head', image: '/images/RawVideoEditing.jpeg' }
+  { id: 4, title: 'AI Videos', image: '/images/AIVideoEditing.jpeg' },
+  { id: 5, title: 'Explainer', image: '/images/RawVideoEditing.jpeg' },
+  { id: 6, title: 'Posters', image: '/images/GraphicDesign.jpeg' },
 ];
 
 export default function CategorySection() {
   const containerRef = useRef(null);
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // 1. Trigger for when the section comes into 85% view
   const { ref: fullScreenRef, inView: isFullScreen } = useInView({
@@ -34,7 +49,7 @@ export default function CategorySection() {
   const autoAngle = useMotionValue(0);
   const entranceSpin = useMotionValue(-720); // 2 fast revolutions = -720 degrees
   const entranceRadiusScale = useMotionValue(0.5); // Start with a gracefully clustered radius
-  const entranceY = useMotionValue(1000);
+  const entranceY = useMotionValue(isMobile ? 500 : 1000);
   const entranceOpacity = useMotionValue(0);
   const dragAngle = useMotionValue(0);
   const dragTiltX = useMotionValue(0);
@@ -169,31 +184,39 @@ export default function CategorySection() {
         setCardsReady(true);
         document.body.style.overflow = "";
 
-        // 4.0s Sequence: 1.2s Rise -> 1.2s Hold -> 1.6s Bloom & Spin
-        const animY = animate(entranceY, [1000, 200, 200, 0], {
-          duration: 4.0,
-          times: [0, 0.3, 0.6, 1],
-          ease: ["easeOut", "linear", [0.22, 1, 0.36, 1]]
+        // Phase 1: Cards come into view (Delayed 0.8s). Rise to a holding position closer to the blob.
+        const holdY = isMobile ? 120 : 180;
+        const animY1 = animate(entranceY, [isMobile ? 500 : 1000, holdY], {
+          duration: 1.5,
+          delay: 0.8,
+          ease: "easeOut"
         });
-        animControlsRef.current.push(animY);
+        animControlsRef.current.push(animY1);
 
-        const animOp = animate(entranceOpacity, [0, 1, 1, 1], {
-          duration: 4.0,
-          times: [0, 0.3, 0.6, 1],
-          ease: ["easeOut", "linear", "linear"]
+        const animOp = animate(entranceOpacity, [0, 1], {
+          duration: 1.5,
+          delay: 0.8,
+          ease: "linear"
         });
         animControlsRef.current.push(animOp);
 
-        // After 2.4s (1.2s + 1.2s), trigger the spin and bloom outward
+        // Phase 2: They float at the hold position for 2.0s.
+        // Phase 3: At 4.3s (0.8s delay + 1.5s rise + 2.0s float), start revolutions and come up.
         timersRef.current.timer2 = setTimeout(() => {
+          // Come up to final position
+          const animY2 = animate(entranceY, 0, { duration: 2.5, ease: [0.22, 1, 0.36, 1] });
+          animControlsRef.current.push(animY2);
+
+          // Fast revolution
           entranceSpin.set(-720);
           const animSpin = animate(entranceSpin, 0, { duration: 3.5, ease: [0.22, 1, 0.36, 1] });
           animControlsRef.current.push(animSpin);
 
+          // Bloom outward
           entranceRadiusScale.set(0.5);
-          const animScale = animate(entranceRadiusScale, 1, { duration: 1.6, ease: [0.22, 1, 0.36, 1] });
+          const animScale = animate(entranceRadiusScale, 1, { duration: 2.0, ease: [0.22, 1, 0.36, 1] });
           animControlsRef.current.push(animScale);
-        }, 2400);
+        }, 4300);
 
       }, 0);
     };
@@ -236,7 +259,7 @@ export default function CategorySection() {
         setCardsReady(false);
         entranceSpin.set(-720);
         entranceRadiusScale.set(0.5);
-        entranceY.set(1000);
+        entranceY.set(isMobile ? 500 : 1000);
         entranceOpacity.set(0);
       }
     }
@@ -256,12 +279,12 @@ export default function CategorySection() {
   };
 
   const blobVariants = {
-    hidden: { opacity: 0, transition: { duration: 0 } },
-    visible: { opacity: 1, transition: { duration: 1.6, ease: smoothEase } }
+    hidden: { opacity: 0, y: 300, transition: { duration: 0 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 3.0, ease: smoothEase } }
   };
 
   return (
-    <section ref={setRefs} className="relative w-full h-[300vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb] z-10">
+    <section id="categories" ref={setRefs} className="relative w-full h-[300vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb] z-10">
       <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0">
 
         {/* Heading */}
@@ -271,7 +294,7 @@ export default function CategorySection() {
           animate={isPlaying ? "visible" : "hidden"}
           variants={headingVariants}
         >
-          <div className="w-full flex flex-col items-start text-left text-[14vw] sm:text-[12vw] md:text-[10vw] lg:text-[10vw] leading-[0.9] tracking-tighter text-[#032218] opacity-60 sm:opacity-70 md:opacity-[0.85] select-none -translate-y-[2vh] sm:-translate-y-[4vh] md:-translate-y-[8vh]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <div className="w-full flex flex-col items-start text-left text-[18vw] sm:text-[14vw] md:text-[10vw] lg:text-[10vw] leading-[0.9] tracking-tighter text-[#032218] opacity-70 sm:opacity-70 md:opacity-[0.85] select-none -translate-y-[1vh] sm:-translate-y-[4vh] md:-translate-y-[8vh]" style={{ fontFamily: 'var(--font-heading)' }}>
             <span className="block" style={{ marginLeft: 'clamp(14vw, 20vw, 26vw)' }}>cinematic</span>
             <span className="block" style={{ marginLeft: 'clamp(6vw, 10vw, 14vw)' }}>video</span>
             <span className="block" style={{ marginLeft: 'clamp(10vw, 15vw, 20vw)' }}>editing</span>
@@ -280,19 +303,19 @@ export default function CategorySection() {
 
         <div className="relative flex items-center justify-center min-h-[350px] sm:min-h-[450px] md:min-h-[600px] w-full max-w-6xl z-10" style={{ perspective: "1600px" }}>
           <motion.div
-            className="absolute inset-0 m-auto w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] md:w-[800px] md:h-[800px] bg-[#20C997] blur-[80px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none transform-gpu"
+            className="absolute inset-0 m-auto w-[420px] h-[420px] sm:w-[500px] sm:h-[500px] md:w-[800px] md:h-[800px] bg-[#20C997] blur-[110px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none transform-gpu"
             initial="hidden" style={{ transformOrigin: "center center" }} animate={isPlaying ? "visible" : "hidden"}
             variants={{
-              hidden: { scale: 0.001, opacity: 0, transition: { duration: 0 } },
-              visible: { scale: 1, opacity: 0.1, transition: { duration: 1.6, ease: smoothEase } }
+              hidden: { scale: 0.8, opacity: 0, y: 300, transition: { duration: 0 } },
+              visible: { scale: 1, opacity: isMobile ? 0.18 : 0.1, y: 0, transition: { duration: 3.0, ease: smoothEase } }
             }}
           />
 
           <motion.div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <motion.div style={{ zIndex: 15, transformOrigin: "center center" }} className="absolute inset-0 flex items-center justify-center pointer-events-none" initial="hidden" animate={isPlaying ? "visible" : "hidden"} variants={blobVariants}>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-                <div className="w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] md:w-[550px] md:h-[550px] lg:w-[680px] lg:h-[680px] relative flex justify-center items-center">
-                  <Neo color="#20C997" isPlaying={isPlaying} />
+                <div className="w-[420px] h-[420px] sm:w-[400px] sm:h-[400px] md:w-[550px] md:h-[550px] lg:w-[680px] lg:h-[680px] relative flex justify-center items-center">
+                  <Neo color="#20C997" isPlaying={isPlaying} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
                 </div>
               </div>
             </motion.div>
@@ -326,11 +349,6 @@ export default function CategorySection() {
           animate={{ opacity: cardsReady ? 1 : 0 }}
           transition={{ duration: 1.0 }}
         >
-          <div className="flex items-center gap-2 sm:gap-3 text-[#042f22] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full animate-bounce glass">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6" /></svg>
-            <span className="text-[11px] sm:text-[12px] md:text-[14px] uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold drop-shadow-sm" style={{ fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>Swipe to Rotate</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg>
-          </div>
         </motion.div>
       </div>
     </section>
@@ -348,8 +366,8 @@ function OrbitingCard({ cat, index, numItems, autoAngle, dragAngle, dragTiltX, d
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w < 480) { setOrbitRadius(140); setOrbitYDepth(50); }
-      else if (w < 768) { setOrbitRadius(150); setOrbitYDepth(60); }
+      if (w < 480) { setOrbitRadius(165); setOrbitYDepth(55); }
+      else if (w < 768) { setOrbitRadius(180); setOrbitYDepth(65); }
       else if (w < 1024) { setOrbitRadius(340); setOrbitYDepth(100); }
       else { setOrbitRadius(520); setOrbitYDepth(120); }
     };

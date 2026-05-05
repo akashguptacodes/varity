@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function CalendlyButton({ 
-  text = "Schedule a Call 🧑‍💻", 
+  text = "Schedule a Call ", 
   url, 
   className = "",
   inline = false
