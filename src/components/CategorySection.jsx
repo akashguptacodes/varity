@@ -44,16 +44,32 @@ export default function CategorySection() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [cardsReady, setCardsReady] = useState(false);
+  const [blobReady, setBlobReady] = useState(false);
 
   // Motion values for cards
   const autoAngle = useMotionValue(0);
-  const entranceSpin = useMotionValue(-720); // 2 fast revolutions = -720 degrees
-  const entranceRadiusScale = useMotionValue(0.5); // Start with a gracefully clustered radius
+  const entranceSpin = useMotionValue(-360);
+  const entranceRadiusScale = useMotionValue(0.5);
   const entranceY = useMotionValue(isMobile ? 500 : 1000);
   const entranceOpacity = useMotionValue(0);
   const dragAngle = useMotionValue(0);
   const dragTiltX = useMotionValue(0);
   const dragTiltZ = useMotionValue(0);
+
+  // Motion values for individual word entrance/exit
+  const word1Opacity = useMotionValue(0);
+  const word1Y = useMotionValue(50);
+  const word2Opacity = useMotionValue(0);
+  const word2Y = useMotionValue(50);
+  const word3Opacity = useMotionValue(0);
+  const word3Y = useMotionValue(50);
+
+  // Motion values for blob (fade in from bottom, no scale change)
+  const blobScale = useMotionValue(1);
+  const blobY = useMotionValue(300);
+  const blobOpacity = useMotionValue(0);
+  const glowScale = useMotionValue(0.3);
+  const glowOpacity = useMotionValue(0);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -71,7 +87,7 @@ export default function CategorySection() {
   // Mouse / Touch handlers for dragging
   const wheelTimeout = useRef(null);
   const touchRef = useRef({ startX: 0, lastX: 0, active: false });
-  const timersRef = useRef({ timer1: null, timer2: null, scrollTimeout: null });
+  const timersRef = useRef({ timers: [], scrollTimeout: null });
   const animControlsRef = useRef([]);
 
   useEffect(() => {
@@ -160,6 +176,15 @@ export default function CategorySection() {
   }, [dragAngle, dragTiltX, dragTiltZ]);
 
 
+  const smoothEase = [0.22, 1, 0.36, 1];
+
+  // Helper to push a timer and track it for cleanup
+  const pushTimer = (fn, ms) => {
+    const id = setTimeout(fn, ms);
+    timersRef.current.timers.push(id);
+    return id;
+  };
+
   // Handle scroll locking and start sequence
   useEffect(() => {
     let hasStarted = false;
@@ -170,7 +195,6 @@ export default function CategorySection() {
       window.removeEventListener('scroll', handleScroll);
 
       const top = containerRef.current?.offsetTop;
-
       if (top !== undefined) {
         if (Math.abs(window.scrollY - top) > 5) {
           window.scrollTo({ top, behavior: 'auto' });
@@ -178,47 +202,77 @@ export default function CategorySection() {
       }
 
       document.body.style.overflow = "hidden";
+      setIsPlaying(true);
 
-      timersRef.current.timer1 = setTimeout(() => {
-        setIsPlaying(true);
+      // ── Phase 1: Words enter one-by-one ──
+      // "cinematic" at t=0
+      animControlsRef.current.push(animate(word1Opacity, 1, { duration: 0.7, ease: "easeOut" }));
+      animControlsRef.current.push(animate(word1Y, 0, { duration: 0.7, ease: smoothEase }));
+
+      // "video" at t=250ms
+      pushTimer(() => {
+        animControlsRef.current.push(animate(word2Opacity, 1, { duration: 0.7, ease: "easeOut" }));
+        animControlsRef.current.push(animate(word2Y, 0, { duration: 0.7, ease: smoothEase }));
+      }, 250);
+
+      // "editing" at t=500ms
+      pushTimer(() => {
+        animControlsRef.current.push(animate(word3Opacity, 1, { duration: 0.7, ease: "easeOut" }));
+        animControlsRef.current.push(animate(word3Y, 0, { duration: 0.7, ease: smoothEase }));
+      }, 500);
+
+      // ── Phase 2: Blob fades in from bottom at t=1400ms ──
+      pushTimer(() => {
+        setBlobReady(true);
+        animControlsRef.current.push(animate(blobY, 0, { duration: 1.5, ease: smoothEase }));
+        animControlsRef.current.push(animate(blobOpacity, 1, { duration: 1.5, ease: "easeOut" }));
+        animControlsRef.current.push(animate(glowScale, 1, { duration: 1.8, ease: smoothEase }));
+        animControlsRef.current.push(animate(glowOpacity, isMobile ? 0.18 : 0.1, { duration: 1.5, ease: "easeOut" }));
+      }, 1400);
+
+      // ── Phase 3: Cards rise from bottom at t=2800ms ──
+      pushTimer(() => {
         setCardsReady(true);
         document.body.style.overflow = "";
 
-        // Phase 1: Cards come into view (Delayed 0.8s). Rise to a holding position closer to the blob.
         const holdY = isMobile ? 120 : 180;
-        const animY1 = animate(entranceY, [isMobile ? 500 : 1000, holdY], {
+        animControlsRef.current.push(animate(entranceY, [isMobile ? 500 : 1000, holdY], {
           duration: 1.5,
-          delay: 0.8,
           ease: "easeOut"
-        });
-        animControlsRef.current.push(animY1);
-
-        const animOp = animate(entranceOpacity, [0, 1], {
+        }));
+        animControlsRef.current.push(animate(entranceOpacity, [0, 1], {
           duration: 1.5,
-          delay: 0.8,
           ease: "linear"
-        });
-        animControlsRef.current.push(animOp);
+        }));
+      }, 2800);
 
-        // Phase 2: They float at the hold position for 2.0s.
-        // Phase 3: At 4.3s (0.8s delay + 1.5s rise + 2.0s float), start revolutions and come up.
-        timersRef.current.timer2 = setTimeout(() => {
-          // Come up to final position
-          const animY2 = animate(entranceY, 0, { duration: 2.5, ease: [0.22, 1, 0.36, 1] });
-          animControlsRef.current.push(animY2);
+      // ── Phase 4: Words exit one-by-one (after cards are visible) ──
+      // "cinematic" exits at t=4800ms
+      pushTimer(() => {
+        animControlsRef.current.push(animate(word1Y, -300, { duration: 0.9, ease: smoothEase }));
+        animControlsRef.current.push(animate(word1Opacity, 0, { duration: 0.9, ease: "easeIn" }));
+      }, 4800);
 
-          // Fast revolution
-          entranceSpin.set(-720);
-          const animSpin = animate(entranceSpin, 0, { duration: 3.5, ease: [0.22, 1, 0.36, 1] });
-          animControlsRef.current.push(animSpin);
+      // "video" exits at t=5100ms
+      pushTimer(() => {
+        animControlsRef.current.push(animate(word2Y, -300, { duration: 0.9, ease: smoothEase }));
+        animControlsRef.current.push(animate(word2Opacity, 0, { duration: 0.9, ease: "easeIn" }));
+      }, 5100);
 
-          // Bloom outward
-          entranceRadiusScale.set(0.5);
-          const animScale = animate(entranceRadiusScale, 1, { duration: 2.0, ease: [0.22, 1, 0.36, 1] });
-          animControlsRef.current.push(animScale);
-        }, 4300);
+      // "editing" exits at t=5400ms
+      pushTimer(() => {
+        animControlsRef.current.push(animate(word3Y, -300, { duration: 0.9, ease: smoothEase }));
+        animControlsRef.current.push(animate(word3Opacity, 0, { duration: 0.9, ease: "easeIn" }));
+      }, 5400);
 
-      }, 0);
+      // ── Phase 5: Cards float then revolve + rise at t=6300ms ──
+      pushTimer(() => {
+        animControlsRef.current.push(animate(entranceY, 0, { duration: 2.5, ease: smoothEase }));
+        entranceSpin.set(-360);
+        animControlsRef.current.push(animate(entranceSpin, 0, { duration: 3.5, ease: smoothEase }));
+        entranceRadiusScale.set(0.5);
+        animControlsRef.current.push(animate(entranceRadiusScale, 1, { duration: 2.0, ease: smoothEase }));
+      }, 6300);
     };
 
     const handleScroll = () => {
@@ -234,21 +288,19 @@ export default function CategorySection() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timersRef.current.scrollTimeout);
-      clearTimeout(timersRef.current.timer1);
-      clearTimeout(timersRef.current.timer2);
+      timersRef.current.timers.forEach(t => clearTimeout(t));
       document.body.style.overflow = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFullScreen]); // Removed isPlaying from deps so state updates don't cancel the sequence
+  }, [isFullScreen]);
 
   // Handle conditional reset logic
   useEffect(() => {
     if (!isVisible) {
       const top = containerRef.current?.offsetTop;
-      // If we scrolled completely above the section, reset the animation state
       if (top !== undefined && window.scrollY < top) {
-        clearTimeout(timersRef.current.timer1);
-        clearTimeout(timersRef.current.timer2);
+        timersRef.current.timers.forEach(t => clearTimeout(t));
+        timersRef.current.timers = [];
         clearTimeout(timersRef.current.scrollTimeout);
         document.body.style.overflow = "";
 
@@ -257,13 +309,25 @@ export default function CategorySection() {
 
         setIsPlaying(false);
         setCardsReady(false);
-        entranceSpin.set(-720);
+        setBlobReady(false);
+        entranceSpin.set(-360);
         entranceRadiusScale.set(0.5);
         entranceY.set(isMobile ? 500 : 1000);
         entranceOpacity.set(0);
+
+        // Reset word motion values
+        word1Opacity.set(0); word1Y.set(50);
+        word2Opacity.set(0); word2Y.set(50);
+        word3Opacity.set(0); word3Y.set(50);
+
+        // Reset blob motion values
+        blobScale.set(1); blobY.set(300); blobOpacity.set(0);
+        glowScale.set(0.3); glowOpacity.set(0);
       }
     }
-  }, [isVisible, entranceSpin, entranceRadiusScale, entranceY, entranceOpacity]);
+  }, [isVisible, entranceSpin, entranceRadiusScale, entranceY, entranceOpacity,
+      word1Opacity, word1Y, word2Opacity, word2Y, word3Opacity, word3Y,
+      blobScale, blobY, blobOpacity, glowScale, glowOpacity]);
 
   const setRefs = (node) => {
     containerRef.current = node;
@@ -271,54 +335,49 @@ export default function CategorySection() {
     visibilityRef(node);
   };
 
-  const smoothEase = [0.22, 1, 0.36, 1];
-
-  const headingVariants = {
-    hidden: { y: 0, opacity: 1, transition: { duration: 0 } },
-    visible: { y: -300, opacity: 0, transition: { duration: 3.0, ease: smoothEase } }
-  };
-
-  const blobVariants = {
-    hidden: { opacity: 0, y: 300, transition: { duration: 0 } },
-    visible: { opacity: 1, y: 0, transition: { duration: 3.0, ease: smoothEase } }
-  };
-
   return (
     <section id="categories" ref={setRefs} className="relative w-full h-[300vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb] z-10">
-      <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0">
+      <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0 relative">
 
-        {/* Heading */}
-        <motion.div
-          className="absolute inset-0 flex items-center justify-start pointer-events-none z-0"
-          initial="hidden"
-          animate={isPlaying ? "visible" : "hidden"}
-          variants={headingVariants}
-        >
+        {/* Heading — each word individually animated */}
+        <div className="absolute inset-0 flex items-center justify-start pointer-events-none z-0">
           <div className="w-full flex flex-col items-start text-left text-[18vw] sm:text-[14vw] md:text-[10vw] lg:text-[10vw] leading-[0.9] tracking-tighter text-[#032218] opacity-70 sm:opacity-70 md:opacity-[0.85] select-none -translate-y-[1vh] sm:-translate-y-[4vh] md:-translate-y-[8vh]" style={{ fontFamily: 'var(--font-heading)' }}>
-            <span className="block" style={{ marginLeft: 'clamp(14vw, 20vw, 26vw)' }}>cinematic</span>
-            <span className="block" style={{ marginLeft: 'clamp(6vw, 10vw, 14vw)' }}>video</span>
-            <span className="block" style={{ marginLeft: 'clamp(10vw, 15vw, 20vw)' }}>editing</span>
+            <motion.span className="block" style={{ marginLeft: 'clamp(14vw, 20vw, 26vw)', opacity: word1Opacity, y: word1Y }}>cinematic</motion.span>
+            <motion.span className="block" style={{ marginLeft: 'clamp(6vw, 10vw, 14vw)', opacity: word2Opacity, y: word2Y }}>video</motion.span>
+            <motion.span className="block" style={{ marginLeft: 'clamp(10vw, 15vw, 20vw)', opacity: word3Opacity, y: word3Y }}>editing</motion.span>
           </div>
-        </motion.div>
+        </div>
+
+
 
         <div className="relative flex items-center justify-center min-h-[350px] sm:min-h-[450px] md:min-h-[600px] w-full max-w-6xl z-10" style={{ perspective: "1600px" }}>
+          {/* Background glow — scales in place */}
           <motion.div
             className="absolute inset-0 m-auto w-[420px] h-[420px] sm:w-[500px] sm:h-[500px] md:w-[800px] md:h-[800px] bg-[#20C997] blur-[110px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none transform-gpu"
-            initial="hidden" style={{ transformOrigin: "center center" }} animate={isPlaying ? "visible" : "hidden"}
-            variants={{
-              hidden: { scale: 0.8, opacity: 0, y: 300, transition: { duration: 0 } },
-              visible: { scale: 1, opacity: isMobile ? 0.18 : 0.1, y: 0, transition: { duration: 3.0, ease: smoothEase } }
-            }}
+            style={{ transformOrigin: "center center", scale: glowScale, opacity: glowOpacity }}
           />
 
           <motion.div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <motion.div style={{ zIndex: 15, transformOrigin: "center center" }} className="absolute inset-0 flex items-center justify-center pointer-events-none" initial="hidden" animate={isPlaying ? "visible" : "hidden"} variants={blobVariants}>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-                <div className="w-[420px] h-[420px] sm:w-[400px] sm:h-[400px] md:w-[550px] md:h-[550px] lg:w-[680px] lg:h-[680px] relative flex justify-center items-center">
-                  <Neo color="#20C997" isPlaying={isPlaying} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
-                </div>
-              </div>
-            </motion.div>
+            {/* 3D Blob — now a sibling of cards so z-index correctly interleaves */}
+            {blobReady && (
+              <motion.div
+                className="pointer-events-auto absolute"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  marginLeft: isMobile ? -210 : -340,
+                  marginTop: isMobile ? -210 : -340,
+                  width: isMobile ? 420 : 680,
+                  height: isMobile ? 420 : 680,
+                  zIndex: 15,
+                  scale: blobScale,
+                  y: blobY,
+                  opacity: blobOpacity,
+                }}
+              >
+                <Neo color="#20C997" isPlaying={isVisible} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
+              </motion.div>
+            )}
 
             {/* Orbiting Cards Mapped as Direct Siblings */}
             {CATEGORIES.map((cat, index) => (
@@ -426,9 +485,6 @@ function OrbitingCard({ cat, index, numItems, autoAngle, dragAngle, dragTiltX, d
         </motion.div>
 
         {/* Removed top tags text */}
-        <p className="absolute -bottom-5 sm:-bottom-7 right-1 text-[#064e3b] text-[9px] sm:text-[11px] md:text-[13px] lg:text-[14px] tracking-widest uppercase font-semibold transition-all duration-300 group-hover:text-[#042f22] group-hover:translate-y-1 transform-gpu rounded-full px-3 py-1 sm:px-4 sm:py-1.5" style={{ background: 'linear-gradient(135deg, rgba(239,248,246,0.75), rgba(220,242,235,0.55))', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(32,201,151,0.12)' }}>
-          View Project
-        </p>
       </motion.div>
     </motion.div>
   );

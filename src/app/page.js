@@ -18,6 +18,10 @@ const CategorySection = dynamic(() => import("@/components/CategorySection"), {
   ssr: false,
 });
 
+const BrandsMarquee = dynamic(() => import("@/components/BrandsMarquee"), {
+  ssr: false,
+});
+
 const TestimonialsSection = dynamic(() => import("@/components/TestimonialsSection"), {
   ssr: false,
 });
@@ -53,8 +57,14 @@ export default function Home() {
         <CategorySection />
       </LazySection>
 
-      {/* Spacer between Category and Testimonials */}
+      {/* Spacer before Brands */}
       <div className="w-full h-16 sm:h-20 md:h-24 lg:h-32 bg-[#fbfcfb]" />
+
+      {/* Brands Marquee Section */}
+      <BrandsMarquee />
+
+      {/* Spacer between Brands and Testimonials */}
+      <div className="w-full h-8 sm:h-10 md:h-12 lg:h-16 bg-[#fbfcfb]" />
 
       {/* Testimonials Section */}
       <LazySection minHeight="100vh">

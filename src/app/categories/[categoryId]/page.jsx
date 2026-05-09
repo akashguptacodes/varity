@@ -5,6 +5,7 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import { getComplexColumns, getThumbnailUrl } from "@/lib/videoUtils";
 import { useParams, useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
+import MovingSoul from "@/components/MovingSoul";
 
 const CATEGORIES = [
   { id: 1, title: 'AI Videos', image: '/images/AIVideoEditing.jpeg' },
@@ -12,6 +13,8 @@ const CATEGORIES = [
   { id: 3, title: 'Posters', image: '/images/GraphicDesign.jpeg' },
   { id: 4, title: 'Talking Head', image: '/images/RawVideoEditing.jpeg' }
 ];
+
+
 
 export default function CategoryPage() {
   const params = useParams();
@@ -171,6 +174,7 @@ export default function CategoryPage() {
         {centerModalVideo && (
           <CenterHoverModal
             video={centerModalVideo}
+            isMobile={isMobile}
             onClose={() => setCenterModalVideo(null)}
           />
         )}
@@ -312,7 +316,7 @@ function MobileFlatList({ columns, onCardClick }) {
 
 
 
-function CenterHoverModal({ video, onClose }) {
+function CenterHoverModal({ video, onClose, isMobile }) {
   const isImageOrSlideshow = video.isImage || video.isSlideshow;
   const [currentIndex, setCurrentIndex] = useState(0);
   const isExpandDown = video.expandir === 'down';
@@ -335,7 +339,7 @@ function CenterHoverModal({ video, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[160] flex items-center justify-center p-2 sm:p-6 md:p-8 pointer-events-auto glass-strong"
+      className="fixed inset-0 z-[160] flex items-center justify-center p-2 sm:p-4 md:p-6 pointer-events-auto glass-strong"
       initial={{ backgroundColor: "rgba(4,47,34,0)" }}
       animate={{ backgroundColor: "rgba(4,47,34,0.35)" }}
       exit={{ backgroundColor: "rgba(4,47,34,0)", transition: { duration: 0.15 } }}
@@ -344,31 +348,29 @@ function CenterHoverModal({ video, onClose }) {
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className={`relative rounded-[16px] sm:rounded-[32px] md:rounded-[40px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} p-3 sm:p-6 gap-3 sm:gap-8 md:gap-12 bg-[#fbfcfb] shadow-2xl`}
+        className={`relative rounded-[16px] sm:rounded-[32px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} bg-[#fbfcfb] shadow-2xl overflow-hidden`}
         style={{
-          width: "1150px",
-          maxWidth: "96vw",
-          maxHeight: "92vh",
-          height: isExpandDown ? "auto" : undefined,
-          minHeight: isExpandDown ? "auto" : undefined,
-          overflowY: "auto",
+          width: "1000px",
+          height: "600px", // Uniform fixed height
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+          padding: isMobile ? "24px" : "48px", // FORCED INLINE PADDING
+          display: "flex",
+          flexDirection: isExpandDown ? "column" : (isMobile ? "column" : "row"),
+          gap: "32px",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="absolute top-2 right-2 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[170] w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 z-[170] w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
-        {/* Video area — proper aspect ratio on mobile, flex-based on desktop */}
+        {/* Video area */}
         <div
-          className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} relative bg-black shrink-0 overflow-hidden rounded-[12px] sm:rounded-[24px] md:rounded-[32px] shadow-lg group`}
-          style={{
-            flex: isExpandDown ? undefined : '1 1 auto',
-            aspectRatio: '16 / 9',
-          }}
+          className={`${!isExpandDown ? 'w-full h-[45%] md:h-full md:w-1/2' : 'w-full h-[55%] md:h-[65%]'} relative bg-black shrink-0 overflow-hidden rounded-[12px] sm:rounded-[24px] flex items-center justify-center`}
         >
           {isImageOrSlideshow ? (
             <AnimatePresence>
@@ -381,8 +383,8 @@ function CenterHoverModal({ video, onClose }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="absolute inset-0 w-full h-full object-fill"
-                style={{ objectFit: "fill" }}
+                className="absolute inset-0 w-full h-full"
+                style={{ objectFit: "contain" }} // Prevents squishing/stretching!
               />
             </AnimatePresence>
           ) : (
@@ -398,9 +400,9 @@ function CenterHoverModal({ video, onClose }) {
           )}
         </div>
 
-        <div className={`${isExpandDown ? 'w-full' : 'w-full md:w-[50%]'} flex flex-col justify-center`} style={{
+        {/* Text Area */}
+        <div className={`${!isExpandDown ? 'w-full h-[55%] md:h-full md:w-1/2' : 'w-full h-[45%] md:h-[35%]'} flex flex-col justify-center overflow-y-auto`} style={{
           fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif",
-          padding: isExpandDown ? 'clamp(12px, 3vw, 32px)' : 'clamp(8px, 2vw, 32px) clamp(8px, 3vw, 80px)',
         }}>
           <div className="flex items-center gap-3 mb-4 sm:mb-8">
             <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-subtle">
@@ -422,56 +424,4 @@ function CenterHoverModal({ video, onClose }) {
   );
 }
 
-function MovingSoul() {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-[0]">
-      {/* Green soul */}
-      <motion.div
-        className="absolute -top-[20%] -left-[10%] w-[40vw] h-[40vw] min-w-[400px] min-h-[400px] rounded-full opacity-80 blur-[60px]"
-        style={{ background: "radial-gradient(circle, rgba(32,201,151,0.85) 0%, transparent 75%)" }}
-        animate={{
-          x: ["0vw", "30vw", "10vw", "-10vw", "0vw"],
-          y: ["0vh", "20vh", "50vh", "10vh", "0vh"],
-          scale: [1, 1.3, 0.8, 1.2, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-      
-      {/* Dark Green soul */}
-      <motion.div
-        className="absolute top-[20%] -right-[20%] w-[35vw] h-[35vw] min-w-[500px] min-h-[500px] rounded-full opacity-70 blur-[70px]"
-        style={{ background: "radial-gradient(circle, rgba(13,124,102,0.9) 0%, transparent 75%)" }}
-        animate={{
-          x: ["0vw", "-40vw", "-20vw", "10vw", "0vw"],
-          y: ["0vh", "-30vh", "10vh", "40vh", "0vh"],
-          scale: [0.8, 1.4, 1, 1.3, 0.8],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
 
-      {/* Mint Green soul */}
-      <motion.div
-        className="absolute -bottom-[20%] left-[10%] w-[45vw] h-[45vw] min-w-[600px] min-h-[600px] rounded-full opacity-70 blur-[80px]"
-        style={{ background: "radial-gradient(circle, rgba(52,211,153,0.7) 0%, transparent 75%)" }}
-        animate={{
-          x: ["0vw", "20vw", "40vw", "-20vw", "0vw"],
-          y: ["0vh", "-40vh", "-10vh", "10vh", "0vh"],
-          scale: [1.1, 0.9, 1.2, 0.8, 1.1],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-    </div>
-  );
-}

@@ -45,7 +45,7 @@ export default function Neo({
     <div ref={ref} className="w-full h-full">
       <Canvas
         camera={{ position: [0, 0, resolvedCameraZ] }}
-        frameloop="always"
+        frameloop={shouldPlay ? "always" : "demand"}
           /* Cap DPR at 1 on mobile for better perf */
           dpr={[1, isMobile ? 1 : 1.5]}
           gl={{

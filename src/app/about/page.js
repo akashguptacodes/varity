@@ -6,6 +6,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import CalendlyButton from "@/components/CalendlyButton";
 import Tilt from "react-parallax-tilt";
+import MovingSoul from "@/components/MovingSoul";
 
 const Neo = dynamic(() => import("@/components/Neo/Neo"), { ssr: false });
 const StoryVisualOrb = dynamic(() => import("@/components/StoryVisualOrb"), { ssr: false });
@@ -70,6 +71,8 @@ const STATS_DATA = [
   { value: "99%", label: "Satisfaction Rate" },
 ];
 
+
+
 export default function AboutPage() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -80,7 +83,8 @@ export default function AboutPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
 
   return (
-    <main ref={containerRef} className="relative bg-[#fbfcfb] min-h-screen text-[#042f22] overflow-x-hidden selection:bg-[#20C997]/30">
+    <main ref={containerRef} className="relative bg-transparent min-h-screen text-[#042f22] overflow-x-hidden selection:bg-[#20C997]/30">
+      <MovingSoul />
 
       {/* Fonts loaded via globals.css */}
 
@@ -88,11 +92,6 @@ export default function AboutPage() {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative w-full min-h-[100vh] flex flex-col justify-center items-center overflow-hidden z-10">
-        {/* Background decorative elements */}
-        <div className="absolute top-[-10%] right-[-10%] w-[700px] h-[700px] bg-[#20C997]/[0.04] rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-[#042f22]/[0.03] rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-[30%] left-[15%] w-[200px] h-[200px] bg-[#20C997]/[0.05] rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-[20%] right-[20%] w-[300px] h-[300px] bg-[#065f46]/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
         {/* Neo Blob Background — click & drag to rotate */}
         <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-auto cursor-grab active:cursor-grabbing">
@@ -197,19 +196,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ OUR STORY (PREMIUM) ═══════════════ */}
-      <section className="relative bg-white rounded-[40px] sm:rounded-[60px] z-20 mt-4 sm:mt-8 overflow-hidden group/section border border-[#042f22]/[0.02]" style={{ boxShadow: '0 -10px 40px rgba(13,124,102,0.03), 0 20px 60px rgba(13,124,102,0.04)' }}>
-        {/* Cinematic Background Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#fbfcfb] to-[#f4f9f7] pointer-events-none" />
-        <motion.div 
-          className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-[#20C997]/[0.015] rounded-full blur-[100px] pointer-events-none"
-          animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] bg-[#065f46]/[0.015] rounded-full blur-[120px] pointer-events-none"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
+      <section className="relative bg-white/60 backdrop-blur-sm rounded-[40px] sm:rounded-[60px] z-20 mt-4 sm:mt-8 overflow-hidden group/section border border-[#042f22]/[0.02]" style={{ boxShadow: '0 -10px 40px rgba(13,124,102,0.03), 0 20px 60px rgba(13,124,102,0.04)' }}>
 
         <div className="relative z-10 w-full max-w-[88rem] mx-auto" style={{ padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 80px)" }}>
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] items-center gap-[clamp(48px,8vw,120px)]">
@@ -441,10 +428,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ EXPERTISE BENTO GRID ═══════════════ */}
-      <section className="relative bg-[#fbfcfb] overflow-hidden">
-        {/* Ambient */}
-        <div className="absolute top-[20%] left-[5%] w-[350px] h-[350px] bg-[#20C997]/[0.03] rounded-full blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-[10%] right-[10%] w-[250px] h-[250px] bg-[#065f46]/[0.02] rounded-full blur-[100px] pointer-events-none" />
+      <section className="relative bg-[#fbfcfb]/60 backdrop-blur-sm overflow-hidden">
 
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
           {/* Header */}
@@ -516,7 +500,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="relative bg-white overflow-hidden">
+      <section className="relative bg-white/60 backdrop-blur-sm overflow-hidden">
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(80px, 10vw, 140px) clamp(28px, 6vw, 80px)" }}>
           {/* Header */}
           <motion.div
@@ -582,7 +566,7 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ CTA ═══════════════ */}
-      <section className="relative bg-[#fbfcfb]">
+      <section className="relative bg-[#fbfcfb]/60 backdrop-blur-sm">
         <div className="w-full max-w-7xl" style={{ margin: "0 auto", padding: "clamp(60px, 8vw, 100px) clamp(28px, 6vw, 80px) clamp(80px, 10vw, 140px)" }}>
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.97 }}
@@ -626,8 +610,8 @@ export default function AboutPage() {
 
 
       {/* ═══════════════ FOOTER (matching main page, without revolving cards) ═══════════════ */}
-      <footer className="relative w-full bg-[#fbfcfb] overflow-hidden mt-16 sm:mt-24 md:mt-32 shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] z-30">
-        <div className="relative z-20 w-full bg-[#fbfcfb]">
+      <footer className="relative w-full bg-[#fbfcfb]/60 backdrop-blur-sm overflow-hidden mt-16 sm:mt-24 md:mt-32 shadow-[0_-20px_60px_rgba(13,124,102,0.08)] rounded-t-[40px] sm:rounded-t-[60px] z-30">
+        <div className="relative z-20 w-full">
           {/* Footer links bar */}
           <div
             className="w-full flex flex-col md:flex-row items-center justify-between py-8 pt-16 sm:pt-20 md:pt-24"
@@ -688,3 +672,4 @@ export default function AboutPage() {
     </main>
   );
 }
+
