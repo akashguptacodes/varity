@@ -46,32 +46,32 @@ export default function Neo({
       <Canvas
         camera={{ position: [0, 0, resolvedCameraZ] }}
         frameloop={shouldPlay ? "always" : "demand"}
-          /* Cap DPR at 1 on mobile for better perf */
-          dpr={[1, isMobile ? 1 : 1.5]}
-          gl={{
-            antialias: false,
-            powerPreference: "high-performance",
-            toneMapping: THREE.NoToneMapping,
-          }}
-        >
-          <ambientLight intensity={0.5} />
-          {/* OrbitControls — only when enableRotate is true */}
-          {enableRotate && (
-            <OrbitControls
-              enableZoom={false}
-              enablePan={false}
-              rotateSpeed={0.6}
-              dampingFactor={0.08}
-              enableDamping
-            />
-          )}
-          <ParticleSphere
-            color={color}
-            inView={shouldPlay}
-            isMobile={isMobile}
-            particleCount={particleCount}
-            particleSize={particleSize}
+        /* Cap DPR at 1 on mobile for better perf */
+        dpr={[1, isMobile ? 1 : 1.5]}
+        gl={{
+          antialias: false,
+          powerPreference: "high-performance",
+          toneMapping: THREE.NoToneMapping,
+        }}
+      >
+        <ambientLight intensity={0.5} />
+        {/* OrbitControls — only when enableRotate is true */}
+        {enableRotate && (
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            rotateSpeed={0.6}
+            dampingFactor={0.08}
+            enableDamping
           />
+        )}
+        <ParticleSphere
+          color={color}
+          inView={shouldPlay}
+          isMobile={isMobile}
+          particleCount={particleCount}
+          particleSize={particleSize}
+        />
       </Canvas>
     </div>
   );
