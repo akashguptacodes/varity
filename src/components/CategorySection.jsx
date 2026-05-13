@@ -34,7 +34,7 @@ export default function CategorySection() {
 
   // 1. Trigger for when the section comes into 85% view
   const { ref: fullScreenRef, inView: isFullScreen } = useInView({
-    rootMargin: "0px 0px -60% 0px",
+    threshold: 0.85,
   });
 
   // 2. Trigger for when the section is COMPLETELY out of view (up or down)
@@ -44,7 +44,6 @@ export default function CategorySection() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [cardsReady, setCardsReady] = useState(false);
-  const [blobReady, setBlobReady] = useState(false);
 
   // Motion values for cards
   const autoAngle = useMotionValue(0);
@@ -65,8 +64,8 @@ export default function CategorySection() {
   const word3Y = useMotionValue(50);
 
   // Motion values for blob (fade in from bottom, no scale change)
-  const blobScale = useMotionValue(1);
-  const blobY = useMotionValue(300);
+  const blobScale = useMotionValue(0);
+  const blobY = useMotionValue(0);
   const blobOpacity = useMotionValue(0);
   const glowScale = useMotionValue(0.3);
   const glowOpacity = useMotionValue(0);
@@ -177,6 +176,18 @@ export default function CategorySection() {
 
 
   const smoothEase = [0.22, 1, 0.36, 1];
+  const [blobSize, setBlobSize] = useState(680);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 768) setBlobSize(420);
+      else if (w < 1200) setBlobSize(560);
+      else setBlobSize(680);
+    };
+    update();
+    window.addEventListener('resize', update, { passive: true });
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Helper to push a timer and track it for cleanup
   const pushTimer = (fn, ms) => {
@@ -192,15 +203,11 @@ export default function CategorySection() {
     const startSequence = () => {
       if (hasStarted) return;
       hasStarted = true;
-      window.removeEventListener('scroll', handleScroll);
 
       const top = containerRef.current?.offsetTop;
       if (top !== undefined) {
-        if (Math.abs(window.scrollY - top) > 5) {
-          window.scrollTo({ top, behavior: 'auto' });
-        }
+        window.scrollTo({ top, behavior: 'smooth' });
       }
-
       document.body.style.overflow = "hidden";
       setIsPlaying(true);
 
@@ -221,58 +228,68 @@ export default function CategorySection() {
         animControlsRef.current.push(animate(word3Y, 0, { duration: 0.7, ease: smoothEase }));
       }, 300);
 
-      // ── Phase 2: Blob fades in from bottom at t=800ms ──
+      // ── Phase 2: Blob scales up at t=800ms ──
       pushTimer(() => {
-        setBlobReady(true);
-        animControlsRef.current.push(animate(blobY, 0, { duration: 1.2, ease: smoothEase }));
-        animControlsRef.current.push(animate(blobOpacity, 1, { duration: 1.2, ease: "easeOut" }));
+        animControlsRef.current.push(animate(blobScale, 1, { duration: 1.2, ease: smoothEase }));
+        blobOpacity.set(1);
         animControlsRef.current.push(animate(glowScale, 1, { duration: 1.5, ease: smoothEase }));
         animControlsRef.current.push(animate(glowOpacity, isMobile ? 0.18 : 0.1, { duration: 1.2, ease: "easeOut" }));
       }, 800);
 
-      // ── Phase 3: Cards rise from bottom at t=1600ms ──
+      // ── Phase 3: Cards appear -> Dip -> Sync rise (t=1000ms base) ──
       pushTimer(() => {
         setCardsReady(true);
         document.body.style.overflow = "";
 
+        const startY = isMobile ? 500 : 1000;
         const holdY = isMobile ? 120 : 180;
-        animControlsRef.current.push(animate(entranceY, [isMobile ? 500 : 1000, holdY], {
-          duration: 1.5,
-          ease: "easeOut"
-        }));
+
+        // 1. Cards appear at bottom first
+        entranceY.set(startY);
         animControlsRef.current.push(animate(entranceOpacity, [0, 1], {
-          duration: 1.5,
+          duration: 0.5,
           ease: "linear"
         }));
-      }, 1600);
 
-      // ── Phase 4: Words exit one-by-one (after cards are visible) ──
-      // "cinematic" exits at t=3500ms
-      pushTimer(() => {
-        animControlsRef.current.push(animate(word1Y, -300, { duration: 0.9, ease: smoothEase }));
-        animControlsRef.current.push(animate(word1Opacity, 0, { duration: 0.9, ease: "easeIn" }));
-      }, 3500);
+        // 2. Cards start moving (Dip first, then the SYNCED rise)
+        const totalMoveDuration = 2.2;
+        const dipY = startY + (isMobile ? 60 : 120); // deeper dip
 
-      // "video" exits at t=3750ms
-      pushTimer(() => {
-        animControlsRef.current.push(animate(word2Y, -300, { duration: 0.9, ease: smoothEase }));
-        animControlsRef.current.push(animate(word2Opacity, 0, { duration: 0.9, ease: "easeIn" }));
-      }, 3750);
+        animControlsRef.current.push(animate(entranceY, [startY, dipY, dipY, holdY], {
+          duration: totalMoveDuration,
+          times: [0, 0.15, 0.3, 1], // dip quickly, hold for 15%, then rise
+          ease: ["easeOut", "linear", smoothEase]
+        }));
 
-      // "editing" exits at t=4000ms
-      pushTimer(() => {
-        animControlsRef.current.push(animate(word3Y, -300, { duration: 0.9, ease: smoothEase }));
-        animControlsRef.current.push(animate(word3Opacity, 0, { duration: 0.9, ease: "easeIn" }));
-      }, 4000);
+        // 3. Heading starts moving ONLY when cards begin their rise to holdY (after dip and hold)
+        // syncDelay is the moment cards start their final rise (times[2] = 0.3)
+        const syncDelay = (totalMoveDuration * 0.3 * 1000) + 1400;
+        const exitDuration = totalMoveDuration * 0.7;
 
-      // ── Phase 5: Cards float then revolve + rise at t=4800ms ──
+        pushTimer(() => {
+          animControlsRef.current.push(animate(word1Y, -500, { duration: exitDuration, ease: smoothEase }));
+          animControlsRef.current.push(animate(word1Opacity, 0, { duration: exitDuration, ease: "easeIn" }));
+
+          pushTimer(() => {
+            animControlsRef.current.push(animate(word2Y, -500, { duration: exitDuration, ease: smoothEase }));
+            animControlsRef.current.push(animate(word2Opacity, 0, { duration: exitDuration, ease: "easeIn" }));
+          }, 150);
+
+          pushTimer(() => {
+            animControlsRef.current.push(animate(word3Y, -500, { duration: exitDuration, ease: smoothEase }));
+            animControlsRef.current.push(animate(word3Opacity, 0, { duration: exitDuration, ease: "easeIn" }));
+          }, 300);
+        }, syncDelay);
+      }, 1000);
+
+      // ── Phase 4: Cards float then revolve + rise at t=3200ms ──
       pushTimer(() => {
         animControlsRef.current.push(animate(entranceY, 0, { duration: 2.2, ease: smoothEase }));
         entranceSpin.set(-360);
         animControlsRef.current.push(animate(entranceSpin, 0, { duration: 3.0, ease: smoothEase }));
         // Animate radius scale to the final orbit size
         animControlsRef.current.push(animate(entranceRadiusScale, 0.8, { duration: 2.0, ease: smoothEase }));
-      }, 4800);
+      }, 3200);
     };
 
     const handleScroll = () => {
@@ -280,8 +297,10 @@ export default function CategorySection() {
     };
 
     if (isFullScreen && !isPlaying) {
-      startSequence();
-      window.addEventListener('scroll', handleScroll, { passive: true });
+      const timer = setTimeout(() => {
+        startSequence();
+      }, 100);
+      return () => clearTimeout(timer);
     }
 
     return () => {
@@ -308,7 +327,6 @@ export default function CategorySection() {
 
         setIsPlaying(false);
         setCardsReady(false);
-        setBlobReady(false);
         entranceSpin.set(-360);
         entranceRadiusScale.set(0.65);
         entranceY.set(isMobile ? 500 : 1000);
@@ -320,7 +338,7 @@ export default function CategorySection() {
         word3Opacity.set(0); word3Y.set(50);
 
         // Reset blob motion values
-        blobScale.set(1); blobY.set(300); blobOpacity.set(0);
+        blobScale.set(0); blobY.set(0); blobOpacity.set(0);
         glowScale.set(0.3); glowOpacity.set(0);
       }
     }
@@ -330,13 +348,12 @@ export default function CategorySection() {
 
   const setRefs = (node) => {
     containerRef.current = node;
-    fullScreenRef(node);
     visibilityRef(node);
   };
 
   return (
     <section id="categories" ref={setRefs} className="relative w-full h-[300vh] bg-gradient-to-b from-[#fbfcfb] via-[#EFF8F6] to-[#fbfcfb] z-10">
-      <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0 relative">
+      <div ref={fullScreenRef} className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16 md:py-24 z-0 relative">
 
         {/* Heading — each word individually animated */}
         <div className="absolute inset-0 flex items-center justify-start pointer-events-none z-0">
@@ -358,25 +375,23 @@ export default function CategorySection() {
 
           <motion.div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {/* 3D Blob — now a sibling of cards so z-index correctly interleaves */}
-            {blobReady && (
-              <motion.div
-                className="pointer-events-auto absolute"
-                style={{
-                  top: "50%",
-                  left: "50%",
-                  marginLeft: isMobile ? -210 : -340,
-                  marginTop: isMobile ? -210 : -340,
-                  width: isMobile ? 420 : 680,
-                  height: isMobile ? 420 : 680,
-                  zIndex: 15,
-                  scale: blobScale,
-                  y: blobY,
-                  opacity: blobOpacity,
-                }}
-              >
-                <Neo color="#20C997" isPlaying={isVisible} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
-              </motion.div>
-            )}
+            <motion.div
+              className="pointer-events-auto absolute"
+              style={{
+                top: "50%",
+                left: "50%",
+                marginLeft: -blobSize / 2,
+                marginTop: -blobSize / 2,
+                width: blobSize,
+                height: blobSize,
+                zIndex: 15,
+                scale: blobScale,
+                y: blobY,
+                opacity: blobOpacity,
+              }}
+            >
+              <Neo color="#20C997" isPlaying={isVisible} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
+            </motion.div>
 
             {/* Orbiting Cards Mapped as Direct Siblings */}
             {CATEGORIES.map((cat, index) => (
@@ -425,8 +440,8 @@ function OrbitingCard({ cat, index, numItems, autoAngle, dragAngle, dragTiltX, d
     const update = () => {
       const w = window.innerWidth;
       if (w < 480) { setOrbitRadius(160); setOrbitYDepth(55); }
-      else if (w < 768) { setOrbitRadius(180); setOrbitYDepth(65); }
-      else if (w < 1024) { setOrbitRadius(320); setOrbitYDepth(100); }
+      else if (w < 768) { setOrbitRadius(200); setOrbitYDepth(70); }
+      else if (w < 1200) { setOrbitRadius(350); setOrbitYDepth(100); }
       else { setOrbitRadius(500); setOrbitYDepth(120); }
     };
     update();
