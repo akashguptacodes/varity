@@ -228,9 +228,11 @@ export default function CategorySection() {
         animControlsRef.current.push(animate(word3Y, 0, { duration: 0.7, ease: smoothEase }));
       }, 300);
 
-      // ── Phase 2: Blob scales up at t=800ms ──
+      // ── Phase 2: Blob moves up from bottom at t=800ms ──
       pushTimer(() => {
-        animControlsRef.current.push(animate(blobScale, 1, { duration: 1.2, ease: smoothEase }));
+        blobScale.set(1);
+        blobY.set(isMobile ? 200 : 300);
+        animControlsRef.current.push(animate(blobY, 0, { duration: 1.2, ease: smoothEase }));
         blobOpacity.set(1);
         animControlsRef.current.push(animate(glowScale, 1, { duration: 1.5, ease: smoothEase }));
         animControlsRef.current.push(animate(glowOpacity, isMobile ? 0.18 : 0.1, { duration: 1.2, ease: "easeOut" }));
@@ -338,7 +340,7 @@ export default function CategorySection() {
         word3Opacity.set(0); word3Y.set(50);
 
         // Reset blob motion values
-        blobScale.set(0); blobY.set(0); blobOpacity.set(0);
+        blobScale.set(1); blobY.set(isMobile ? 200 : 300); blobOpacity.set(0);
         glowScale.set(0.3); glowOpacity.set(0);
       }
     }
@@ -390,7 +392,7 @@ export default function CategorySection() {
                 opacity: blobOpacity,
               }}
             >
-              <Neo color="#20C997" isPlaying={isVisible} particleCount={isMobile ? 3000 : undefined} particleSize={isMobile ? 0.04 : undefined} />
+              <Neo key={blobSize} color="#20C997" isPlaying={isVisible} particleCount={0} />
             </motion.div>
 
             {/* Orbiting Cards Mapped as Direct Siblings */}
