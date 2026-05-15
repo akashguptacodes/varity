@@ -10,8 +10,7 @@ import MovingSoul from "@/components/MovingSoul";
 const CATEGORIES = [
   { id: 1, title: 'AI Videos', image: '/images/AIVideoEditing.jpeg' },
   { id: 2, title: 'Explainer', image: '/images/Explainer.png' },
-  { id: 3, title: 'Posters', image: '/images/GraphicDesign.jpeg' },
-  { id: 4, title: 'Talking Head', image: '/images/RawVideoEditing.jpeg' }
+  { id: 3, title: 'Posters', image: '/images/GraphicDesign.jpeg' }
 ];
 
 
@@ -20,7 +19,9 @@ export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = parseInt(params.categoryId, 10);
-  const cat = CATEGORIES.find(c => c.id === categoryId);
+  // Normalize ID: Map 4->1, 5->2, 6->3 for the repeated categories
+  const normalizedId = ((categoryId - 1) % 3) + 1;
+  const cat = CATEGORIES.find(c => c.id === normalizedId);
 
   const overlayRef = useRef(null);
   const [scrollContainer, setScrollContainer] = useState(null);
@@ -348,32 +349,38 @@ function CenterHoverModal({ video, onClose, isMobile }) {
     >
       <motion.div
         layoutId={`hover-card-${video.id}`}
-        className={`relative rounded-[16px] sm:rounded-[32px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} bg-[#fbfcfb] shadow-2xl overflow-hidden`}
+        className={`relative rounded-[24px] sm:rounded-[32px] flex flex-col ${!isExpandDown ? 'md:flex-row' : ''} bg-[#fbfcfb] shadow-2xl overflow-hidden`}
         style={{
           width: "1000px",
           height: "600px", // Uniform fixed height
           maxWidth: "95vw",
           maxHeight: "90vh",
-          padding: isMobile ? "24px" : "48px", // FORCED INLINE PADDING
+          padding: 0, // REMOVED OUTER PADDING TO ALLOW STICKING
           display: "flex",
           flexDirection: isExpandDown ? "column" : (isMobile ? "column" : "row"),
-          gap: "32px",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="absolute top-3 right-3 sm:top-5 sm:right-5 z-[170] w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[170] w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-[#042f22] hover:text-white active:text-white transition-all group glass-card hover:bg-gradient-to-br hover:from-[#0d7c66] hover:to-[#20C997]"
+          style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform duration-300"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
 
-        {/* Video area */}
+        {/* Video area — Sticks to top/bottom/left in horizontal, or top/left/right in vertical */}
         <div
-          className={`${!isExpandDown ? 'w-full h-[45%] md:h-full md:w-1/2' : 'w-full h-[55%] md:h-[65%]'} relative bg-black shrink-0 overflow-hidden rounded-[12px] sm:rounded-[24px] flex items-center justify-center`}
+          className={`${!isExpandDown ? 'w-full h-[45%] md:h-full md:w-[55%]' : 'w-full h-[55%] md:h-[65%]'} relative bg-black shrink-0 overflow-hidden flex items-center justify-center`}
+          style={{
+            // Match parent border radius on the outer-facing sides
+            borderTopLeftRadius: "inherit",
+            borderBottomLeftRadius: isMobile || isExpandDown ? "0" : "inherit",
+            borderTopRightRadius: isMobile || isExpandDown ? "inherit" : "0",
+          }}
         >
           {isImageOrSlideshow ? (
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               <motion.img
                 key={currentMediaSrc}
                 src={currentMediaSrc}
@@ -382,9 +389,9 @@ function CenterHoverModal({ video, onClose, isMobile }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 0.6 }}
                 className="absolute inset-0 w-full h-full"
-                style={{ objectFit: "contain" }} // Prevents squishing/stretching!
+                style={{ objectFit: "contain" }}
               />
             </AnimatePresence>
           ) : (
@@ -400,11 +407,15 @@ function CenterHoverModal({ video, onClose, isMobile }) {
           )}
         </div>
 
-        {/* Text Area */}
-        <div className={`${!isExpandDown ? 'w-full h-[55%] md:h-full md:w-1/2' : 'w-full h-[45%] md:h-[35%]'} flex flex-col justify-center overflow-y-auto`} style={{
-          fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        }}>
-          <div className="flex items-center gap-3 mb-4 sm:mb-8">
+        {/* Text Area — Internal padding restored here */}
+        <div 
+          className={`${!isExpandDown ? 'w-full h-[55%] md:h-full md:w-[45%]' : 'w-full h-[45%] md:h-[35%]'} flex flex-col justify-center overflow-y-auto`} 
+          style={{
+            fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            padding: isMobile ? "24px" : "40px 48px", // Re-applying padding only to text area
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-subtle">
               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#20C997] animate-pulse" style={{ boxShadow: "0 0 12px rgba(32,201,151,0.6)" }} />
               <span className="text-[#0d7c66] text-[9px] sm:text-[10px] uppercase tracking-[0.25em] font-black">
@@ -412,10 +423,10 @@ function CenterHoverModal({ video, onClose, isMobile }) {
               </span>
             </div>
           </div>
-          <h4 className="text-[#042f22] text-[18px] sm:text-[28px] md:text-[36px] font-bold mb-2 sm:mb-6 leading-[1.1] tracking-tight">
+          <h4 className="text-[#042f22] text-[18px] sm:text-[24px] md:text-[32px] font-bold mb-3 sm:mb-5 leading-[1.1] tracking-tight">
             {video.title}
           </h4>
-          <p className="text-[#6b7280] text-[13px] sm:text-[16px] leading-[1.6] sm:leading-[1.8]">
+          <p className="text-[#6b7280] text-[13px] sm:text-[15px] leading-[1.6] sm:leading-[1.7]">
             {video.description}
           </p>
         </div>

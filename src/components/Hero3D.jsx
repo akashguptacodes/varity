@@ -77,12 +77,19 @@ function CameraRig({ mouseRef, isMobile }) {
     camera.updateProjectionMatrix();
   }, [camera, size.width]);
 
-  useFrame(() => {
+  useFrame((state, delta) => {
+    // Smoothen mouse coordinates once per frame for all components to consume
+    // We use a frame-rate independent lerp for the mouse itself
+    const mouseLerpFactor = 1 - Math.exp(-12 * delta);
+    mouseRef.current.x = lerp(mouseRef.current.x, mouseRef.current.targetX, mouseLerpFactor);
+    mouseRef.current.y = lerp(mouseRef.current.y, mouseRef.current.targetY, mouseLerpFactor);
+
     // Gentle parallax — reduced sensitivity for smoother feel
     const sensitivity = isMobile ? 0.1 : 0.3;
     const mx = mouseRef.current.x * sensitivity;
     const my = mouseRef.current.y * sensitivity;
 
+    // Camera has its own slower interpolation for extra-organic feel
     camera.position.x += (mx - camera.position.x) * 0.015;
     camera.position.y += (my - camera.position.y) * 0.015;
     camera.lookAt(0, 0, 0);
@@ -208,6 +215,10 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
 
     const sVel = scrollVelocityRef.current.val;
 
+    // Use the smoothed mouse coordinates updated in CameraRig
+    const smoothedMouseX = mouseRef.current.x;
+    const smoothedMouseY = mouseRef.current.y;
+
     cards.forEach((c, idx) => {
       const mesh = refs.current[idx];
       if (!mesh) return;
@@ -225,8 +236,8 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
       const worldZ = c.zOffset;
 
       const parallaxStrength = isMobile ? 0.15 : 0.35 * (1 + c.zOffset * 0.02);
-      const mx = mouseRef.current.x * parallaxStrength;
-      const my = mouseRef.current.y * parallaxStrength;
+      const mx = smoothedMouseX * parallaxStrength;
+      const my = smoothedMouseY * parallaxStrength;
 
       mesh.position.set(worldX + mx, worldY + my, worldZ);
       mesh.rotation.z = angle;
@@ -258,7 +269,7 @@ function OrbitingCards({ scrollVelocityRef, mouseRef, isMobile }) {
 }
 
 export default function Hero3D() {
-  const mouseRef = useRef({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
   const scrollVelocityRef = useRef({ val: 0, lastY: 0, currentY: 0 });
   
   // Track scroll passively to avoid layout thrashing in useFrame
@@ -285,20 +296,23 @@ export default function Hero3D() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handleMouseMove = useCallback(throttle((e) => {
+  const handleMouseMove = useCallback((e) => {
     if (!inView) return;
     const x = (e.clientX / window.innerWidth) * 2 - 1;
     const y = -(e.clientY / window.innerHeight) * 2 + 1;
-    mouseRef.current = { x, y };
-  }, 16), [inView]);
+    mouseRef.current.targetX = x;
+    mouseRef.current.targetY = y;
+  }, [inView]);
 
   // Handle touch for mobile parallax (lighter effect)
-  const handleTouchMove = useCallback(throttle((e) => {
+  const handleTouchMove = useCallback((e) => {
     if (!inView || !e.touches[0]) return;
     const x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
     const y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-    mouseRef.current = { x: x * 0.3, y: y * 0.3 }; // Reduced intensity for touch
-  }, 32), [inView]);
+    // Reduced intensity for touch directly at source
+    mouseRef.current.targetX = x * 0.3;
+    mouseRef.current.targetY = y * 0.3;
+  }, [inView]);
 
   return (
     <div

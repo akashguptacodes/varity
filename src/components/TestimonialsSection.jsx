@@ -206,9 +206,6 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobil
   const zIndex = useTransform(xTransform, distanceRange, [0, 10, 50, 10, 0]);
   // Cards are flat — no rotateY tilt for behind cards, they stay straight on screen
 
-  // Subtle floating animation delay per card
-  const floatDelay = `${(index % 5) * -0.8}s`;
-
   return (
     <motion.div
       onMouseEnter={() => setIsHovered?.(true)}
@@ -234,11 +231,18 @@ const Card = ({ item, index, baseX, totalItems, itemWidth, setIsHovered, isMobil
       >
         <motion.div
           className="w-full h-full relative rounded-[32px]"
+          animate={{
+            y: [0, -12, 0],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
           whileHover={{
             scale: 1.01,
             y: -3
           }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
         >
           <div className="absolute inset-0 rounded-[32px]" style={{ background: 'linear-gradient(145deg, rgba(32,201,151,0.06), rgba(13,124,102,0.03))', boxShadow: 'inset 0 0 0 1px rgba(32,201,151,0.1)' }} />
 
