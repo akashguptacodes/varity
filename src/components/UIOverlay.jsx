@@ -37,7 +37,7 @@ export default function UIOverlay() {
               marginBottom: 'clamp(16px, 3vw, 40px)',
             }}
           >
-            Edit. Elevate. <span style={{ fontFamily: 'var(--font-logo)' }} className="uppercase tracking-tighter font-black">VERITY.</span>
+            Edit. Elevate. VERITY.
           </h1>
 
           {/* CTA button row */}

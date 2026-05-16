@@ -53,7 +53,7 @@ export default function Home() {
       <div className="w-full h-2 md:h-3 bg-[#fbfcfb]" />
 
       {/* Category Section with moving fluid blob */}
-      <LazySection minHeight="300vh" persist={true}>
+      <LazySection minHeight="500vh" persist={true}>
         <CategorySection />
       </LazySection>
 
