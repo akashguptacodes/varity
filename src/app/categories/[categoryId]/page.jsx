@@ -232,8 +232,8 @@ function FloatingCard({ card, enterDelay, onCardClick }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-fill group-hover:scale-105 transition-transform duration-700"
-            style={{ objectFit: "fill" }}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            style={{ objectFit: "cover" }}
           />
         </AnimatePresence>
 
@@ -242,8 +242,8 @@ function FloatingCard({ card, enterDelay, onCardClick }) {
           <div className="absolute inset-0 z-15 bg-black pointer-events-none">
             <iframe
               src={`${video.src}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0`}
-              className="absolute inset-0 w-full h-full object-fill"
-              style={{ border: 'none', objectFit: 'fill' }}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ border: 'none', objectFit: 'cover' }}
               allow="autoplay; encrypted-media"
             />
           </div>
@@ -408,8 +408,8 @@ function CenterHoverModal({ video, onClose, isMobile }) {
         </div>
 
         {/* Text Area — Internal padding restored here */}
-        <div 
-          className={`${!isExpandDown ? 'w-full h-[55%] md:h-full md:w-[45%]' : 'w-full h-[45%] md:h-[35%]'} flex flex-col justify-center overflow-y-auto`} 
+        <div
+          className={`${!isExpandDown ? 'w-full h-[55%] md:h-full md:w-[45%]' : 'w-full h-[45%] md:h-[35%]'} flex flex-col justify-center overflow-y-auto`}
           style={{
             fontFamily: "var(--font-arimo), 'Helvetica Neue', Helvetica, Arial, sans-serif",
             padding: isMobile ? "24px" : "40px 48px", // Re-applying padding only to text area
