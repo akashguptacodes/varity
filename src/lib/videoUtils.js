@@ -85,18 +85,11 @@ export const POST_VIDEOS = [
   }
 ];
 
-export const TALK_VIDEOS = [
-  { id: "talk-1", slug: "talk-1", src: "https://drive.google.com/file/d/1OHGyX-Wqxa_oItx7pFEI3RpJXhOJjgjm/preview", thumbnail: "https://drive.google.com/file/d/1Dr4ONjuxRlemr_oRbn_Xi8t_rqjxrDBn/preview", title: "Reel 2", category: "Talking Head", description: "An insightful talking head segment discussing recent industry shifts. Perfect for social media engagement and thought leadership.", height: 320, expandir: "right" },
-  { id: "talk-2", slug: "talk-2", src: "https://drive.google.com/file/d/1NdJea75UtnAu_aOdJ-aCfQu9RnOTs5sC/preview", thumbnail: "https://drive.google.com/file/d/1loHAjv2QiYDDpb2luUaoI9ePvqyDY64D/preview", title: "Suryansh", category: "Talking Head", description: "An exclusive interview with Suryansh covering his journey and insights. A deep dive into leadership and innovation.", height: 480, expandir: "right" },
-  { id: "talk-3", slug: "talk-3", src: "https://drive.google.com/file/d/1X3h4Y5_Hh4MWKsSzf9giBCoub09W7Hyd/preview", thumbnail: "https://drive.google.com/file/d/1wmqKWSyhzAus0AQdY3pRqBS_qhai6bSK/preview", title: "Verity 2.1", category: "Talking Head", description: "A direct address from the team detailing the new Verity 2.1 features. Learn about the latest upgrades straight from the creators.", height: 300, expandir: "right" },
-  { id: "talk-4", slug: "talk-4", src: "https://drive.google.com/file/d/1aTL_X59Rcyu06RwZGIFC_ojOqBj7xw_5/preview", thumbnail: "https://drive.google.com/file/d/16dPM7v_GysQ4OyGOYkvbxNTOq8Ifyc62/preview", title: "Video 2", category: "Talking Head", description: "A focused discussion on best practices for content creation. Providing actionable advice for aspiring digital artists.", height: 420, expandir: "right" },
-];
 
 export const VIDEOS_MAP = {
   1: AI_VIDEOS,
   2: EXP_VIDEOS,
   3: POST_VIDEOS,
-  4: TALK_VIDEOS,
 };
 
 export const getComplexColumns = (categoryId = 1) => {
